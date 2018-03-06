@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+all_afex_additional_sync_fields,all_afex_additional_sync_fields,model_afex_additional_sync_fields,,1,1,1,1

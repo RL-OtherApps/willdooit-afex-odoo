@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<record model="ir.ui.view" id="afex_in_journal">
+    <field name="name">afex_in_journal</field>
+    <field name="model">account.journal</field>
+    <field name="inherit_id" ref="account.view_account_journal_form"/>
+    <field name="arch" type="xml">
+        <field name="currency_id" position="after">
+            <field name="afex_journal"/>
+            <field name="afex_api" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
+            <field name="afex_difference_account_id" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
+        </field>
+    </field>
+</record>
+
+<record model="ir.ui.view" id="afex_in_payments">
+    <field name="name">afex_in_payments</field>
+    <field name="model">account.payment</field>
+    <field name="inherit_id" ref="account.view_account_payment_invoice_form"/>
+    <field name="arch" type="xml">
+        <div name="amount_div" position="after">
+            <field name="is_afex" invisible="1"/>
+            <field name="afex_rate_display" readonly="1" attrs="{'invisible':[('is_afex','=',False)]}"/>
+            <field name="afex_quote_id" invisible="1"/>
+            <field name="afex_rate" invisible="1"/>
+            <field name="afex_os_curr" invisible="1"/>
+            <field name="afex_os_amount" invisible="1"/>
+        </div>
+        <button name="post" position="after">
+            <button name="refresh_quote" string="Re-Quote" type="object" attrs="{'invisible':[('is_afex','=',False)]}"/>
+        </button>
+        <button special="cancel" position="after">
+            <div id="afex_tandc" attrs="{'invisible':[('is_afex','=',False)]}">
+                <p>
+                    You acknowledge that by clicking on VALIDATE you have agreed to execute the transaction based on the market rates which may differ from the rates initially quoted, and you will be bound to the 
+                    <a target="_blank" href="https://www.afex.com/docs/australia_terms&amp;conditions.pdf">AFEX Terms and Conditions</a>, 
+                    <a target="_blank" href="https://www.afex.com/docs/australia/australian_product_disclosure_statement.pdf">Product Disclosure Statement</a> and 
+                    <a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>.  This  transaction will be binding on you when AFEX processes your instructions made through this website.  You acknowledge that your transaction may not be processed immediately by AFEX through this website.  When AFEX does process your Instructions, you will receive a Trade Confirmation via email.  The Trade Confirmation constitutes an error correction mechanism only; if you do not contact AFEX within 24 hours of receipt of the Trade Confirmation, the Transaction details will be deemed to be correct.
+                </p>
+                <img src='/afex_integration_willdoo/static/image/afex_logo.png'/>
+                <p>
+                    The foreign exchange transaction service is provided by Associated Foreign Exchange Australia Pty Limited ABN 119 392 586 and AFSL 305246 (trading as "AFEX"). 
+                    <br/>
+                    Where foreign exchange transaction information is provided on this website, it has been prepared by AFEX without considering the investment objectives, financial situation and particular needs of any person. Before acting on any general advice on this website, you should consider its appropriateness to your circumstances. To the extent permitted by law, AFEX makes no warranty as to the accuracy or suitability of this information and accepts no responsibility for errors or misstatements, negligent or otherwise. Any quotes given are indicative only. The information may be based on assumptions or market conditions and may change without notice. No part of the information is to be construed as solicitation to make a financial investment.  
+                    For further details, refer to AFEX's <a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>.
+                </p>
+            </div>
+        </button>
+    </field>
+</record>
+
+<record model="ir.ui.view" id="afex_in_payments_form">
+    <field name="name">afex_in_payments</field>
+    <field name="model">account.payment</field>
+    <field name="inherit_id" ref="account.view_account_payment_form"/>
+    <field name="arch" type="xml">
+        <field name="journal_id" position="after">
+            <field name="afex_trade_no" readonly="1" attrs="{'invisible':[('afex_trade_no','=',False)]}"/>
+        </field>
+    </field>
+</record>
+
+<record model="ir.ui.view" id="afex_ssi_on_invoice">
+    <field name="name">afex_ssi_on_invoice</field>
+    <field name="model">account.invoice</field>
+    <field name="inherit_id" ref="account.invoice_supplier_form"/>
+    <field name="arch" type="xml">
+        <field name="currency_id" position="after">
+            <field name="afex_ssi_currency" invisible="1"/>
+        </field>
+        <xpath expr='//notebook//page[1]' position="after">
+        <page name="afex_ssi" string="AFEX Information" attrs="{'invisible':[('afex_ssi_currency','=',False)]}">
+            <field name="afex_ssi_details_display"/>
+        </page>
+        </xpath>
+    </field>
+</record>
+</data>
+</odoo>

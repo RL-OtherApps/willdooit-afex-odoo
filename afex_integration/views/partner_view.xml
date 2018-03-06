@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+<record model="ir.ui.view" id="view_partner_bank_form">
+    <field name="name">afex_in_bank_acc</field>
+    <field name="model">res.partner.bank</field>
+    <field name="inherit_id" ref="base.view_partner_bank_form"/>
+    <field name="arch" type="xml">
+        <xpath expr='//field[@name="company_id"]/..' position="after">
+            <group>
+                <field name="is_afex"/>
+                <field name="afex_corporate" attrs="{'invisible':[('is_afex','=',False)]}"/>
+                <field name="afex_bank_country_id" attrs="{'invisible':[('is_afex','=',False)]}"/>
+                <field name="afex_int_bank_country_id" attrs="{'invisible':[('is_afex','=',False)]}"/>
+                <field name="add_afex_info_ids" attrs="{'invisible':[('is_afex','=',False)]}" context="{'default_bank_id':id}">
+                    <tree editable="bottom">
+                        <field name="bank_id" invisible="1"/>
+                        <field name="field"/>
+                        <field name="value"/>
+                    </tree>
+                    <form>
+                        <sheet>
+                            <group>
+                                <field name="bank_id" invisible="1"/>
+                                <field name="field"/>
+                                <field name="value"/>
+                            </group>
+                        </sheet>
+                    </form>
+                </field>
+            </group>
+        </xpath>
+    </field>
+</record>
+
+<record model="ir.ui.view" id="view_partner_form">
+    <field name="name">afex_in_res_partner</field>
+    <field name="model">res.partner</field>
+    <field name="inherit_id" ref="base.view_partner_form"/>
+    <field name="arch" type="xml">
+        <xpath expr='//group[@name="purchase"]/field[@name="supplier"]' position="after">
+            <field name="afex_currency_id" readonly="1" attrs="{'invisible':[('afex_currency_id','=',False)]}"/>
+        </xpath>
+    </field>
+</record>
+
+<record model="ir.actions.server" id="afex_partner_server_sync">
+    <field name="name">AFEX Sync</field>
+    <field name="type">ir.actions.server</field>
+    <field name="model_id" ref="model_res_partner"/>
+    <field name="state">code</field>
+    <field name="code">obj.create_beneficiary_afex()</field>
+</record>
+
+<record model="ir.values" id="afex_partner_sync">
+      <field name="key2" eval="'client_action_multi'"/>
+      <field name="model" eval="'res.partner'"/>
+      <field name="name">afex sync</field>
+      <field name="value" eval="'ir.actions.server,%d'%afex_partner_server_sync"/>
+</record>
+
+</data>
+</odoo>
