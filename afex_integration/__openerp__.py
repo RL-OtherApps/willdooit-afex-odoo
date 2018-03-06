@@ -113,14 +113,18 @@ Usage
     "contributors": [
         'Matthew Palmieri',
         'Richard deMeester',
-        ],
+    ],
+    "licence": "AGPL-3",
     "category": "Accounting",
 
     'data': [
-             "views/account_view.xml",
-             "views/partner_view.xml",
-             "security/ir.model.access.csv",
-             ],
+        "views/account_view.xml",
+        "views/partner_view.xml",
+        "security/ir.model.access.csv",
+    ],
+    'images': [
+        'static/description/screenshot01.png',
+    ],
     "demo": [],
     "test": [],
     "installable": True,

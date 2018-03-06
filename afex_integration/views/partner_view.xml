@@ -3,7 +3,7 @@
 <data>
 
 <record model="ir.ui.view" id="view_partner_bank_form">
-    <field name="name">afex_in_bank_acc</field>
+    <field name="name">Partner Bank with Afex</field>
     <field name="model">res.partner.bank</field>
     <field name="inherit_id" ref="base.view_partner_bank_form"/>
     <field name="arch" type="xml">

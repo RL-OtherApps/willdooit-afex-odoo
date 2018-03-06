@@ -2,8 +2,8 @@
 <odoo>
 <data>
 
-<record model="ir.ui.view" id="afex_in_journal">
-    <field name="name">afex_in_journal</field>
+<record model="ir.ui.view" id="view_account_journal_form">
+    <field name="name">Journal Form with Afex</field>
     <field name="model">account.journal</field>
     <field name="inherit_id" ref="account.view_account_journal_form"/>
     <field name="arch" type="xml">
@@ -15,8 +15,8 @@
     </field>
 </record>
 
-<record model="ir.ui.view" id="afex_in_payments">
-    <field name="name">afex_in_payments</field>
+<record model="ir.ui.view" id="view_account_payment_invoice_form">
+    <field name="name">Account Pay Invoice with Afex</field>
     <field name="model">account.payment</field>
     <field name="inherit_id" ref="account.view_account_payment_invoice_form"/>
     <field name="arch" type="xml">
@@ -51,8 +51,8 @@
     </field>
 </record>
 
-<record model="ir.ui.view" id="afex_in_payments_form">
-    <field name="name">afex_in_payments</field>
+<record model="ir.ui.view" id="view_account_payment_form">
+    <field name="name">Account Payment with Afex</field>
     <field name="model">account.payment</field>
     <field name="inherit_id" ref="account.view_account_payment_form"/>
     <field name="arch" type="xml">
@@ -62,8 +62,8 @@
     </field>
 </record>
 
-<record model="ir.ui.view" id="afex_ssi_on_invoice">
-    <field name="name">afex_ssi_on_invoice</field>
+<record model="ir.ui.view" id="invoice_supplier_form">
+    <field name="name">Supplier Invoice Afex</field>
     <field name="model">account.invoice</field>
     <field name="inherit_id" ref="account.invoice_supplier_form"/>
     <field name="arch" type="xml">
@@ -77,5 +77,6 @@
         </xpath>
     </field>
 </record>
+
 </data>
 </odoo>
