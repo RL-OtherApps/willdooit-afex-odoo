@@ -9,7 +9,7 @@
     <field name="arch" type="xml">
         <field name="currency_id" position="after">
             <field name="afex_journal"/>
-            <field name="afex_api" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
+            <field name="afex_api_key" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
             <field name="afex_difference_account_id" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
         </field>
     </field>

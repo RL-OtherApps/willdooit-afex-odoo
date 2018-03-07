@@ -151,6 +151,12 @@ class ResPartner(models.Model):
             # create new beneficiary
             response_json = self.env['afex.connector'].afex_response(
                 url, data=data, post=True)
+            if any(i.get('Code') for i in response_json.get('items', [])):
+                raise UserError(
+                    _('Beneficiary Errors:\n %s') %
+                    ('\n'.join(i['Name'] for i in response_json['items']
+                               if i.get('Code')),)
+                    )
             if response_json.get('ERROR', True):
                 raise UserError(
                     _('Error while creating beneficiary: %s %s') %
@@ -165,7 +171,7 @@ class ResPartner(models.Model):
             # error if we cannot retrieve the details from afex
             if not partner.afex_unique_id:
                 raise UserError(
-                    _('Error while attempting to retrieving beneficiary'
+                    _('Error while attempting to retrieve beneficiary'
                       ' details from AFEX'))
 
     def update_beneficiary_afex(self):
@@ -216,7 +222,7 @@ class ResPartner(models.Model):
                 'BeneficiaryPostalCode': self.zip or '',
                 'BeneficiaryRegion': self.state_id.code or '',
                 'BankName': self.afex_bank_id.bank_id.name or '',
-                'BankAccountNumber': self.afex_bank_id.bank.acc_number or '',
+                'BankAccountNumber': self.afex_bank_id.acc_number or '',
                 'RemittanceLine1': self.company_id.name or '',
                 'HighLowValue': '1',  # default as high value
                 }

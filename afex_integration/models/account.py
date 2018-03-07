@@ -25,8 +25,10 @@ class AccountJournal(models.Model):
     _inherit = "account.journal"
 
     afex_journal = fields.Boolean(
-        string="AFEX Journal", default=False, copy=False)
-    afex_api = fields.Char(string="AFEX API", copy=False)
+        string='AFEX Journal', default=False, copy=False)
+    afex_api_key = fields.Char(
+        string='AFEX API Key', copy=False,
+        oldname='afex_api')
     afex_difference_account_id = fields.Many2one(
         'account.account',
         string="AFEX Difference Account", copy=False)
@@ -206,8 +208,8 @@ class AccountPayment(models.Model):
                 payment.invoice_ids.write({
                     'afex_ssi_currency': payment.currency_id.name,
                     'afex_ssi_account_number':
-                        len(payment.journal_id.afex_api) > 8 and
-                        self.journal_id.afex_api[0:8] or '',
+                        len(payment.journal_id.afex_api_key) > 8 and
+                        self.journal_id.afex_api_key[0:8] or '',
                     })
 
 

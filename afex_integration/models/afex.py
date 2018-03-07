@@ -15,13 +15,13 @@ class AFEX(models.TransientModel):
             or "https://demo.api.afex.com:7890/api/"
         url = "%s%s" % (base_web, para_url)
         if payment:
-            key = payment.journal_id.afex_api
+            key = payment.journal_id.afex_api_key
         else:
             journal = self.env['account.journal'].search(
-                [('afex_journal', '=', True)])
+                [('afex_journal', '=', True)], limit=1)
             if not journal:
                 raise UserError(_('No AFEX Account Journals Exist.'))
-            key = journal[0].afex_api
+            key = journal.afex_api_key
         headers = {'API-key': key,
                    'Content-Type': 'application/json'
                    }

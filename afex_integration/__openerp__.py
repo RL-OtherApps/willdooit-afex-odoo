@@ -12,7 +12,7 @@ This module allows vendors to be synchronised with AFEX to create AFEX
 Beneficiaries. It also allows payments within Odoo to book payments to vendors
 through AFEX.
 
-You must have an AFEX account, and request/receive an API from AFEX before
+You must have an AFEX account, and request/receive an API Key from AFEX before
 this module can be used. AFEX's terms and conditions apply.
 
 AFEX homepage: https://www.afex.com/
@@ -42,7 +42,7 @@ Setup
 
       - **AFEX Journal** - enabled
 
-      - **AFEX API** - supplied by AFEX and entered here
+      - **AFEX API Key** - supplied by AFEX and entered here
 
       - **AFEX Difference Account** - selected
 
