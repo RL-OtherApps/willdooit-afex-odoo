@@ -123,7 +123,8 @@ class AccountPayment(models.Model):
             if len(partner_id) > 1:
                 raise UserError(_('Invoices contain different Vendors'))
             if not partner_id.afex_unique_id:
-                raise UserError(_('Partner [%s] has not been synced with AFEX' % (partner_id.name)))
+                raise UserError(_('Partner [%s] has not been synced with AFEX'
+                                  % (partner_id.name,)))
             if not partner_id.afex_currency_id:
                 raise UserError(_('Vendor has no AFEX currency id'))
 
