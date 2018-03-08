@@ -40,12 +40,12 @@ class AFEX(models.TransientModel):
         if ok and para_url == 'beneficiarycreate':
             ok = False
             if isinstance(to_ret, list):
-                for item in to_ret:
-                    if item.get('Code', 1) == 0:
-                        ok = True
+                ok = all(i.get('Code', 1) == 0 for i in to_ret)
         if not ok:
             if isinstance(to_ret, list):
-                to_ret = '\n'.join([x.get('Name', '') for x in to_ret])
+                to_ret = '\n\n' +\
+                        '\n'.join(x.get('Name') or '' for x in to_ret
+                                  if x.get('Code') != 0)
             return {
                 "ERROR": True,
                 "code": response,

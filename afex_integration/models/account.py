@@ -4,19 +4,28 @@ from openerp import models, fields, api, _
 from openerp.exceptions import UserError
 
 
-RATE_DISPLAY_MESSAGE = \
-"""Foreign Exchange Transactions are powered and provided by Associated Foreign Exchange Pty Limited.
-Rates provided are indicative, for information purposes only, and are subject to change.
-"""
+RATE_DISPLAY_MESSAGE = '''
+Foreign Exchange Transactions are powered and provided by Associated Foreign
+Exchange Pty Limited. Rates provided are indicative, for information purposes
+only, and are subject to change.
+'''
 
-AFEX_TERMS_AND_COND = '''<p>
-The foreign exchange transaction service is provided by Associated Foreign Exchange Australia Pty Limited ABN 119 392 586 and AFSL 305246 (trading as "AFEX"). 
-Where foreign exchange transaction information is provided on this website, it has been prepared by AFEX without considering the investment objectives, financial situation and particular needs of any person. 
-Before acting on any general advice on this website, you should consider its appropriateness to your circumstances. 
-To the extent permitted by law, AFEX makes no warranty as to the accuracy or suitability of this information and accepts no responsibility for errors or misstatements, negligent or otherwise. 
-Any quotes given are indicative only. The information may be based on assumptions or market conditions and may change without notice. 
-No part of the information is to be construed as solicitation to make a financial investment.  
-For further details, refer to AFEX's <a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>.
+AFEX_TERMS_AND_COND = '''
+<p>
+The foreign exchange transaction service is provided by Associated Foreign
+Exchange Australia Pty Limited ABN 119 392 586 and AFSL 305246 (trading as
+"AFEX"). Where foreign exchange transaction information is provided on this
+website, it has been prepared by AFEX without considering the investment
+objectives, financial situation and particular needs of any person. Before
+acting on any general advice on this website, you should consider its
+appropriateness to your circumstances. To the extent permitted by law, AFEX
+makes no warranty as to the accuracy or suitability of this information and
+accepts no responsibility for errors or misstatements, negligent or otherwise.
+Any quotes given are indicative only. The information may be based on
+assumptions or market conditions and may change without notice. No part of the
+information is to be construed as solicitation to make a financial investment.
+For further details, refer to AFEX's
+<a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>.
 </p>
 '''
 

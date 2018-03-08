@@ -9,7 +9,7 @@
     <field name="arch" type="xml">
         <field name="currency_id" position="after">
             <field name="afex_journal"/>
-            <field name="afex_api_key" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
+            <field name="afex_api_key" groups='account.group_account_user' password="True" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
             <field name="afex_difference_account_id" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
         </field>
     </field>
@@ -28,23 +28,49 @@
             <field name="afex_os_curr" invisible="1"/>
             <field name="afex_os_amount" invisible="1"/>
         </div>
-        <button name="post" position="after">
-            <button name="refresh_quote" string="Re-Quote" type="object" attrs="{'invisible':[('is_afex','=',False)]}"/>
+        <button name="post" position="before">
+            <button name="refresh_quote" string="Quote" type="object" attrs="{'invisible':['|', ('is_afex', '=', False), ('afex_quote_id', '>', 0)]}" class="btn-primary"/>
+            <button name="refresh_quote" string="Re-Quote" type="object" attrs="{'invisible':['|', ('is_afex', '=', False), '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}"/>
         </button>
+
+        <button name="post" position='attributes'>
+            <attribute name='attrs'>{'invisible': [('is_afex', '=', True), '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}</attribute>
+        </button>
+
         <button special="cancel" position="after">
             <div id="afex_tandc" attrs="{'invisible':[('is_afex','=',False)]}">
+                <br/>
+                <br/>
                 <p>
-                    You acknowledge that by clicking on VALIDATE you have agreed to execute the transaction based on the market rates which may differ from the rates initially quoted, and you will be bound to the 
-                    <a target="_blank" href="https://www.afex.com/docs/australia_terms&amp;conditions.pdf">AFEX Terms and Conditions</a>, 
-                    <a target="_blank" href="https://www.afex.com/docs/australia/australian_product_disclosure_statement.pdf">Product Disclosure Statement</a> and 
-                    <a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>.  This  transaction will be binding on you when AFEX processes your instructions made through this website.  You acknowledge that your transaction may not be processed immediately by AFEX through this website.  When AFEX does process your Instructions, you will receive a Trade Confirmation via email.  The Trade Confirmation constitutes an error correction mechanism only; if you do not contact AFEX within 24 hours of receipt of the Trade Confirmation, the Transaction details will be deemed to be correct.
+                    You acknowledge that by clicking on VALIDATE you have agreed to execute the transaction based on the market
+                    rates which may differ from the rates initially quoted, and you will be bound to the
+                    <a target="_blank" href="https://www.afex.com/docs/australia_terms&amp;conditions.pdf">AFEX Terms and Conditions</a>,
+                    <a target="_blank" href="https://www.afex.com/docs/australia/australian_product_disclosure_statement.pdf">Product Disclosure Statement</a> 
+                    and
+                    <a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>.
+                    This transaction will be binding on you when AFEX processes your instructions made through this website.
+                    You acknowledge that your transaction may not be processed immediately by AFEX through this website. When AFEX
+                    does process your Instructions, you will receive a Trade Confirmation via email. The Trade Confirmation
+                    constitutes an error correction mechanism only; if you do not contact AFEX within 24 hours of receipt of the
+                    Trade Confirmation, the Transaction details will be deemed to be correct.
                 </p>
-                <img src='/afex_integration_willdoo/static/image/afex_logo.png'/>
+                <img src='/afex_integration/static/image/afex_logo.png'/>
                 <p>
-                    The foreign exchange transaction service is provided by Associated Foreign Exchange Australia Pty Limited ABN 119 392 586 and AFSL 305246 (trading as "AFEX"). 
+                    The foreign exchange transaction service is provided by Associated Foreign Exchange Australia Pty Limited
+                    ABN 119 392 586 and AFSL 305246 (trading as "AFEX").
                     <br/>
-                    Where foreign exchange transaction information is provided on this website, it has been prepared by AFEX without considering the investment objectives, financial situation and particular needs of any person. Before acting on any general advice on this website, you should consider its appropriateness to your circumstances. To the extent permitted by law, AFEX makes no warranty as to the accuracy or suitability of this information and accepts no responsibility for errors or misstatements, negligent or otherwise. Any quotes given are indicative only. The information may be based on assumptions or market conditions and may change without notice. No part of the information is to be construed as solicitation to make a financial investment.  
-                    For further details, refer to AFEX's <a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>.
+                    <br/>
+                    Where foreign exchange transaction information is provided on this website, it has been prepared by AFEX
+                    without considering the investment objectives, financial situation and particular needs of any person. Before
+                    acting on any general advice on this website, you should consider its appropriateness to your circumstances.
+                    To the extent permitted by law, AFEX makes no warranty as to the accuracy or suitability of this information
+                    and accepts no responsibility for errors or misstatements, negligent or otherwise. Any quotes given are
+                    indicative only. The information may be based on assumptions or market conditions and may change without
+                    notice. No part of the information is to be construed as solicitation to make a financial investment.
+                    <br/>
+                    <br/>
+                    For further details, refer to AFEX's
+                    <a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>
                 </p>
             </div>
         </button>

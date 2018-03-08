@@ -25,8 +25,7 @@ PARTNER_AFEX_DESC_TEXT = """
 
 NOTES:
 
-    A new Partner will be linked to an existing AFEX Beneficiary if the
-    Beneficiary has already been setup in AFEX with the exact same name.
+    A new Partner will be linked to an existing AFEX Beneficiary if the Beneficiary has already been setup in AFEX with the exact same name.
 
     AFEX Beneficiaries/Partners should all contain unique names.
 
@@ -36,13 +35,11 @@ When creating a new Beneficiary:
     The Beneficiary name is the name of this Partner.
     Template Type will always be 1.
     The Notification Email will be the Partners Email Address.
-    Beneficiary Address Details come from this Partner (address line 2 is
-        optional).
+    Beneficiary Address Details come from this Partner (address line 2 is optional).
     The Bank Name is the name of the Partners Bank Account.
-    Bank Account Number is the Partners Banks acc_number.
-    Remittance Lines and Other Important Additional Information will come from
-        the Partners Bank 'AFEX Sync Information'.
-    (if remittance line 1 is not entered, the company name will be sent).
+    Bank Account Number is the Partners Bank Account Number.
+    Remittance Lines and Other Important Additional Information will come from the Partners Bank 'AFEX Sync Information'.
+    (If remittance line 1 is not entered, your company name will be sent).
 """
 
 
@@ -151,12 +148,6 @@ class ResPartner(models.Model):
             # create new beneficiary
             response_json = self.env['afex.connector'].afex_response(
                 url, data=data, post=True)
-            if any(i.get('Code') for i in response_json.get('items', [])):
-                raise UserError(
-                    _('Beneficiary Errors:\n %s') %
-                    ('\n'.join(i['Name'] for i in response_json['items']
-                               if i.get('Code')),)
-                    )
             if response_json.get('ERROR', True):
                 raise UserError(
                     _('Error while creating beneficiary: %s %s') %
