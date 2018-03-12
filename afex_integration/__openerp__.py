@@ -35,7 +35,9 @@ Setup
 
     * **Journal Entries**
 
-      - **Default Debit / Credit Account** - G/L account for bank adjustment
+      - **Default Debit / Credit Account** - G/L account for AFEX clearing.
+          Should be set up as a reconcilable liability account for easy
+          reconciliation with the bank statement.
 
       - **Currency** - Leave blank - Journal will use the company currency when
           posting to the General Ledger
@@ -52,7 +54,7 @@ Setup
     each of them them to mark **one** of their bank accounts to be associated
     with AFEX.
 
-    * **AFEX Bank Account**
+    * **AFEX Beneficiary**
 
 - *Partner Screen*
 

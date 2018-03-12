@@ -33,12 +33,12 @@ When creating a new Beneficiary:
 
     Currency comes from the selected bank's currency.
     The Beneficiary name is the name of this Partner.
-    Template Type will always be 1.
-    The Notification Email will be the Partners Email Address.
+    All payments to the beneficiary will be via wire.
+    The Notification Email will be the Partner's Email Address.
     Beneficiary Address Details come from this Partner (address line 2 is optional).
-    The Bank Name is the name of the Partners Bank Account.
-    Bank Account Number is the Partners Bank Account Number.
-    Remittance Lines and Other Important Additional Information will come from the Partners Bank 'AFEX Sync Information'.
+    The Bank Name is the name of the Partner's Bank Account.
+    Bank Account Number is the Partner's Bank Account Number.
+    Remittance Lines and Other Important Additional Information will come from the Partner's Bank "AFEX Sync Information".
     (If remittance line 1 is not entered, your company name will be sent).
 """
 
@@ -47,7 +47,7 @@ class ResPartnerBank(models.Model):
     _inherit = "res.partner.bank"
 
     is_afex = fields.Boolean(
-        string="AFEX Bank Account", default=False,
+        string="AFEX Beneficiary", default=False,
         copy=False)
     afex_bank_country_id = fields.Many2one(
         'res.country',
@@ -59,6 +59,8 @@ class ResPartnerBank(models.Model):
         copy=False)
     afex_corporate = fields.Boolean(
         string="AFEX Corporate", default=False,
+        help='This must be checked if the beneficiary is a Corporation and '
+        'left blank if the beneficiary is an Individual',
         copy=False)
     add_afex_info_ids = fields.One2many(
         'afex.additional.sync.fields', 'bank_id',
@@ -67,7 +69,7 @@ class ResPartnerBank(models.Model):
 
     _sql_constraints = [
         ('uniq_afex_bank', 'UNIQUE (is_afex,partner_id)',
-         'You can only have 1 AFEX bank account per vendor')
+         'You can only have 1 AFEX beneficiary bank account per vendor')
     ]
 
     @api.multi
@@ -125,14 +127,14 @@ class ResPartner(models.Model):
             bank = partner.bank_ids.filtered(lambda z: z.is_afex)
             if not bank:
                 raise UserError(
-                    _('Vendor requires an AFEX Bank Account'))
+                    _('Vendor requires an AFEX Beneficiary Bank Account'))
             if len(bank) > 1:
                 raise UserError(
-                    _('Vendor can only have one AFEX Bank Account'))
+                    _('Vendor can only have one AFEX Beneficiary Bank Account'))
 
             if not bank.currency_id:
                 raise UserError(
-                    _('AFEX Bank Account does not contain a Currency'))
+                    _('AFEX Beneficiary Bank Account does not contain a Currency'))
 
             # if no afex id, first see if there is one
             if not partner.afex_unique_id:
