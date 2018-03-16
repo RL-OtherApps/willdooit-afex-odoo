@@ -123,7 +123,7 @@ Usage
         'Richard deMeester',
     ],
     'website': 'https://www.willdooit.com',
-    "licence": "AGPL-3",
+    "license": "AGPL-3",
     "category": "Accounting & Finance",
 
     'data': [
