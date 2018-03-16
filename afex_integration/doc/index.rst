@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
-
-{
-    "name": "AFEX International Payments",
-    "version": "9.0.1.0",
-    "summary": "Integration with AFEX Foreign Exchange, by WilldooIT",
-    "description": """
+=================
 Odoo AFEX International Payments
-================================
+=================
+
+Introduction
+============
 
 This module allows vendors to be synchronised with AFEX to create AFEX
 Beneficiaries. It also allows payments within Odoo to book payments to vendors
@@ -15,7 +12,8 @@ through AFEX.
 You must have an AFEX account, and request/receive an API Key from AFEX before
 this module can be used. AFEX's terms and conditions apply.
 
-AFEX homepage: https://www.afex.com/
+AFEX homepage: `https://www.afex.com/ <https://www.afex.com/>`_
+
 
 NOTE:
 
@@ -106,31 +104,5 @@ Usage
 
     Upon AFEX receiving payment, the booked payment to the vendor will be
     confirmed for the scheduled time.
-""",
 
-    "depends": [
-        'account',
-    ],
-    "author": "WilldooIT",
-    "contributors": [
-        'Matthew Palmieri',
-        'Richard deMeester',
-    ],
-    "licence": "AGPL-3",
-    "category": "Accounting & Finance",
 
-    'data': [
-        "views/account_view.xml",
-        "views/partner_view.xml",
-        "security/ir.model.access.csv",
-        "data/ir_config_data.xml",
-    ],
-    'images': [
-        'static/description/banner.png',
-    ],
-    "demo": [],
-    "test": [],
-    "installable": True,
-    "active": False,
-    "application": True,
-}
