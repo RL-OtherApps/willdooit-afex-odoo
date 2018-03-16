@@ -57,15 +57,15 @@ class AccountJournal(models.Model):
     @api.multi
     def afex(self):
         for journal in self.filtered(lambda j: j.afex_journal):
-            if journal.type != 'bank':
-                raise UserError(_('AFEX Journals must be of type - Bank'))
+            if journal.type != 'cash':
+                raise UserError(_('AFEX Journals must be of type - Cash'))
             if journal.inbound_payment_method_ids:
                 raise UserError(
                     _('AFEX Journals must not have any associated Inbound'
                       ' Payment Methods (Debit Methods)'))
 
 
-class AccountRegisterPayments(models.Model):
+class AccountRegisterPayments(models.TransientModel):
     _inherit = 'account.register.payments'
 
     @api.multi

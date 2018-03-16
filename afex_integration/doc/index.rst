@@ -29,7 +29,7 @@ Setup
 
 - *Accounting > Configuration > Journals*
 
-    A new Journal can be created which will be used for AFEX payments.
+    A new Cash Journal can be created which will be used for AFEX payments.
 
     * **Journal Entries**
 
@@ -38,13 +38,19 @@ Setup
           reconciliation with the bank statement.
 
       - **Currency** - Leave blank - Journal will use the company currency when
-          posting to the General Ledger
+          posting to the General Ledger.
 
-      - **AFEX Journal** - enabled
+      - **AFEX Journal** - Enabled.
 
-      - **AFEX API Key** - supplied by AFEX and entered here
+      - **AFEX API Key** - Supplied by AFEX and entered here.
 
-      - **AFEX Difference Account** - selected
+      - **AFEX Difference Account** - Select an account.
+
+    * **Advanced Settings**
+
+      - **Debit Methods** - None should be selected.
+
+      - **Payment Methods** - Enable manual.
 
 - *Partner Screen > Sales and Purchases Tab > Bank Accounts(s)*
 
