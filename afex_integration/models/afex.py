@@ -13,6 +13,8 @@ class AFEX(models.TransientModel):
                       payment=False, head=False, data=False, post=False):
         base_web = self.env['ir.config_parameter'].get_param('afex.url') \
             or "https://demo.api.afex.com:7890/api/"
+        if base_web[-1:] != '/':
+            base_web += '/'
         url = "%s%s" % (base_web, para_url)
         if payment:
             key = payment.journal_id.afex_api_key
