@@ -40,7 +40,8 @@
     <field name="inherit_id" ref="base.view_partner_form"/>
     <field name="arch" type="xml">
         <xpath expr='//group[@name="purchase"]/field[@name="supplier"]' position="after">
-            <field name="afex_currency_id" readonly="1" attrs="{'invisible':[('afex_currency_id','=',False)]}"/>
+            <field name='afex_banks' invisible='1'/>
+            <field name="afex_sync_status" attrs="{'invisible': [('afex_banks', '=', False)]}"/>
         </xpath>
     </field>
 </record>
@@ -50,7 +51,7 @@
     <field name="type">ir.actions.server</field>
     <field name="model_id" ref="model_res_partner"/>
     <field name="state">code</field>
-    <field name="code">obj.create_beneficiary_afex()</field>
+    <field name="code">obj.sync_partners_afex()</field>
 </record>
 
 <record model="ir.values" id="afex_partner_sync">

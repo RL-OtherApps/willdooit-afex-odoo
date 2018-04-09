@@ -11,6 +11,7 @@
             <field name="afex_journal" attrs="{'invisible': [('type', '!=', 'cash')]}"/>
             <field name="afex_api_key" groups='account.group_account_user' password="True" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
             <field name="afex_difference_account_id" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
+            <field name="afex_fee_account_id" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
         </field>
     </field>
 </record>
@@ -23,6 +24,11 @@
         <div name="amount_div" position="after">
             <field name="is_afex" invisible="1"/>
             <field name="afex_rate_display" readonly="1" attrs="{'invisible':[('is_afex','=',False)]}"/>
+            <label for="afex_fee_amount" attrs="{'invisible':['|',('is_afex','=',False),('afex_fee_amount','=',0)]}"/>
+            <div class="o_row" attrs="{'invisible':['|',('is_afex','=',False),('afex_fee_amount','=',0)]}">
+                <field name="afex_fee_amount" readonly='1'/>
+                <field name="afex_fee_currency_id" readonly='1' options="{'no_create': True, 'no_open': True}" groups="base.group_multi_currency"/>
+            </div>
             <field name="afex_quote_id" invisible="1"/>
             <field name="afex_rate" invisible="1"/>
             <field name="afex_os_curr" invisible="1"/>

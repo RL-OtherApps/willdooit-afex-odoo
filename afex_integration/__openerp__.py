@@ -2,13 +2,13 @@
 
 {
     "name": "AFEX International Payments",
-    "version": "9.0.1.0",
+    "version": "9.0.2.0",
     "summary": "Integration with AFEX Foreign Exchange, by WilldooIT",
     "description": """
 Odoo AFEX International Payments
 ================================
 
-This module allows vendors to be synchronised with AFEX to create AFEX
+This module allows vendor banks to be synchronised with AFEX to create AFEX
 Beneficiaries. It also allows payments within Odoo to book payments to vendors
 through AFEX.
 
@@ -16,15 +16,6 @@ You must have an AFEX account, and request/receive an API Key from AFEX before
 this module can be used. AFEX's terms and conditions apply.
 
 AFEX homepage: https://www.afex.com/
-
-NOTE:
-
-    If a Beneficiary is setup within AFEX with the same name as a new Odoo
-    partner, then the Odoo AFEX sync will link the Odoo partner to the existing
-    AFEX Beneficiary without creating a new one.
-
-    Odoo partners which are synced with AFEX must have unique names.
-
 
 Setup
 -----
@@ -46,7 +37,10 @@ Setup
 
       - **AFEX API Key** - Supplied by AFEX and entered here.
 
-      - **AFEX Difference Account** - Select an account.
+      - **AFEX Difference Account** - Select an account for exchange
+          gains/losses.
+
+      - **AFEX Fees Account** - Select an account for expensing AFEX fees.
 
     * **Advanced Settings**
 
@@ -57,16 +51,32 @@ Setup
 - *Partner Screen > Sales and Purchases Tab > Bank Accounts(s)*
 
     Vendors have an option available against their bank accounts to allow
-    each of them them to mark **one** of their bank accounts to be associated
-    with AFEX.
+    them to be marked as bank accounts to be associated with AFEX.  There
+    should only be one for any currency for a given vendor.
 
     * **AFEX Beneficiary**
+
+    * **Currency**
+
+    Other values will depend on the beneficiary.  Generally, attempting to sync
+    beneficiaries wity incomplete information will tell you of missing required
+    data, but it varies due to many factors.
+
+    * **AFEX Corporate** - If the beneficiary is not an individual.
+
+    * **AFEX Bank Country**
+
+    * **AFEX Intermediary Bank Country**
+
+    * **AFEX Sync Information** - Various values.
+
+    Other required values are picked up from the partner address area.
 
 - *Partner Screen*
 
     Partners have an **AFEX Sync** option available in their **Action Drop
-    Down** to allow the Partner and their Bank Account to be uploaded to AFEX,
-    which will create an **AFEX Beneficiary**.
+    Down** to allow the Partner and their Bank Accounts to be synced to AFEX,
+    which will create **AFEX Beneficiaries**.
 
     * **Action**
 
@@ -74,6 +84,11 @@ Setup
 
     The **AFEX Beneficiary** should be confirmed **by AFEX** before any
     payments are made.
+
+    A general indication of the status is shown  on the *Sales and Purchases*
+    Tab.
+
+    * **AFEX Status** - Either *Sync Needed* or *Synchronised*.
 
 - *Settings > Technical > System Parameters*
 
@@ -97,13 +112,17 @@ Usage
     exchange rate from AFEX, update the **payment amount** using the exchange
     rate, and display quote information on the payment screen.
 
+    If applicable, the AFEX fee amount and fee currency will be displayed as
+    well.
+
     Each **Payment Quote** is valid for 30 seconds.
 
     The **Re-Quote** button on the payment screen can be used to refresh the
     quote.
 
     When the payment is **Validated**, the system will send information to AFEX
-    to book a payment with the vendor.
+    to book a payment with the vendor.  If the fee currency is the same as the
+    settlement currency, then the fee will be included in the payment journal.
 
     Information about the booked payment will be displayed on the bill.
 
