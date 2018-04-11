@@ -115,7 +115,7 @@ class ResPartnerBank(models.Model):
                 continue
 
             new_afex_id = '%s%s%s' % \
-                (self.partner_id.id, self.currency_id.name or 'x', bank.id)
+                (bank.partner_id.id, bank.currency_id.name or 'x', bank.id)
 
             url = "beneficiarycreate"
             data = bank.return_afex_data()
@@ -130,7 +130,7 @@ class ResPartnerBank(models.Model):
                      _(PARTNER_AFEX_DESC_TEXT))
                 )
 
-            self.afex_unique_id = new_afex_id
+            bank.afex_unique_id = new_afex_id
 
     def update_beneficiary_afex_id(self):
         self.ensure_one()
