@@ -2,6 +2,18 @@
 <odoo>
 <data>
 
+<record id="view_company_form" model="ir.ui.view">
+    <field name="name">res.company.form afex</field>
+    <field name="model">res.company</field>
+    <field name="inherit_id" ref="base.view_company_form"/>
+    <field name="arch" type="xml">
+        <field name="currency_id" position="after">
+            <field name="afex_api_key" groups='account.group_account_user' password="True"/>
+        </field>
+    </field>
+</record>
+
+
 <record model="ir.ui.view" id="view_account_journal_form">
     <field name="name">Journal Form with Afex</field>
     <field name="model">account.journal</field>
@@ -9,8 +21,7 @@
     <field name="arch" type="xml">
         <field name="currency_id" position="after">
             <field name="afex_journal" attrs="{'invisible': [('type', '!=', 'cash')]}"/>
-            <field name="afex_api_key" groups='account.group_account_user' password="True" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
-            <field name="afex_difference_account_id" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
+            <field name="afex_partner_id" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
             <field name="afex_fee_account_id" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
         </field>
     </field>
@@ -23,16 +34,18 @@
     <field name="arch" type="xml">
         <div name="amount_div" position="after">
             <field name="is_afex" invisible="1"/>
-            <field name="afex_rate_display" readonly="1" attrs="{'invisible':[('is_afex','=',False)]}"/>
+            <label for="afex_stl_amount" attrs="{'invisible':['|',('is_afex','=',False),('afex_stl_amount','=',0)]}"/>
+            <div class="o_row" attrs="{'invisible':['|',('is_afex','=',False),('afex_stl_amount','=',0)]}">
+                <field name="afex_stl_amount" readonly='1'/>
+                <field name="afex_stl_currency_id" readonly='1' options="{'no_create': True, 'no_open': True}" groups="base.group_multi_currency"/>
+            </div>
             <label for="afex_fee_amount" attrs="{'invisible':['|',('is_afex','=',False),('afex_fee_amount','=',0)]}"/>
             <div class="o_row" attrs="{'invisible':['|',('is_afex','=',False),('afex_fee_amount','=',0)]}">
                 <field name="afex_fee_amount" readonly='1'/>
                 <field name="afex_fee_currency_id" readonly='1' options="{'no_create': True, 'no_open': True}" groups="base.group_multi_currency"/>
             </div>
             <field name="afex_quote_id" invisible="1"/>
-            <field name="afex_rate" invisible="1"/>
-            <field name="afex_os_curr" invisible="1"/>
-            <field name="afex_os_amount" invisible="1"/>
+            <field name="afex_rate_display" readonly="1" attrs="{'invisible':[('is_afex','=',False)]}"/>
         </div>
         <button name="post" position="before">
             <button name="refresh_quote" string="Quote" type="object" attrs="{'invisible':['|', ('is_afex', '=', False), ('afex_quote_id', '>', 0)]}" class="btn-primary"/>
@@ -44,8 +57,7 @@
         </button>
 
         <button special="cancel" position="after">
-            <div id="afex_tandc" attrs="{'invisible':[('is_afex','=',False)]}">
-                <br/>
+            <div id="afex_tandc" attrs="{'invisible':[('is_afex','=',False)]}" style="font-size:x-small;">
                 <br/>
                 <p>
                     You acknowledge that by clicking on VALIDATE you have agreed to execute the transaction based on the market
@@ -83,6 +95,82 @@
     </field>
 </record>
 
+<record id="view_account_payment_from_invoices" model="ir.ui.view">
+    <field name="name">account.register.payments.wizard</field>
+    <field name="model">account.register.payments</field>
+    <field name='inherit_id' ref='account.view_account_payment_from_invoices'/>
+    <field name="arch" type="xml">
+        <field name='currency_id' position='replace'/>
+        <field name='amount' position='replace'>
+            <label for="amount"/>
+            <div name="amount_div" class="o_row">
+                <field name="amount"/>
+                <field name="currency_id" options="{'no_create': True, 'no_open': True}" groups="base.group_multi_currency"/>
+            </div>
+            <field name="is_afex" invisible="1"/>
+            <label for="afex_stl_amount" attrs="{'invisible':['|',('is_afex','=',False),('afex_stl_amount','=',0)]}"/>
+            <div class="o_row" attrs="{'invisible':['|',('is_afex','=',False),('afex_stl_amount','=',0)]}">
+                <field name="afex_stl_amount" readonly='1'/>
+                <field name="afex_stl_currency_id" readonly='1' options="{'no_create': True, 'no_open': True}" groups="base.group_multi_currency"/>
+            </div>
+            <label for="afex_fee_amount" attrs="{'invisible':['|',('is_afex','=',False),('afex_fee_amount','=',0)]}"/>
+            <div class="o_row" attrs="{'invisible':['|',('is_afex','=',False),('afex_fee_amount','=',0)]}">
+                <field name="afex_fee_amount" readonly='1'/>
+                <field name="afex_fee_currency_id" readonly='1' options="{'no_create': True, 'no_open': True}" groups="base.group_multi_currency"/>
+            </div>
+            <field name="afex_quote_id" invisible="1"/>
+            <field name="afex_rate_display" readonly="1" attrs="{'invisible':[('is_afex','=',False)]}"/>
+        </field>
+
+        <button name="create_payment" position="before">
+            <button name="refresh_quote" string="Quote" type="object" attrs="{'invisible':['|', ('is_afex', '=', False), ('afex_quote_id', '>', 0)]}" class="btn-primary"/>
+            <button name="refresh_quote" string="Re-Quote" type="object" attrs="{'invisible':['|', ('is_afex', '=', False), '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}"/>
+        </button>
+
+        <button name="create_payment" position='attributes'>
+            <attribute name='attrs'>{'invisible': [('is_afex', '=', True), '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}</attribute>
+        </button>
+
+        <button special="cancel" position="after">
+            <div id="afex_tandc" attrs="{'invisible':[('is_afex','=',False)]}" style="font-size:x-small;">
+                <br/>
+                <p>
+                    You acknowledge that by clicking on VALIDATE you have agreed to execute the transaction based on the market
+                    rates which may differ from the rates initially quoted, and you will be bound to the
+                    <a target="_blank" href="https://www.afex.com/docs/australia_terms&amp;conditions.pdf">AFEX Terms and Conditions</a>,
+                    <a target="_blank" href="https://www.afex.com/docs/australia/australian_product_disclosure_statement.pdf">Product Disclosure Statement</a> 
+                    and
+                    <a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>.
+                    This transaction will be binding on you when AFEX processes your instructions made through this website.
+                    You acknowledge that your transaction may not be processed immediately by AFEX through this website. When AFEX
+                    does process your Instructions, you will receive a Trade Confirmation via email. The Trade Confirmation
+                    constitutes an error correction mechanism only; if you do not contact AFEX within 24 hours of receipt of the
+                    Trade Confirmation, the Transaction details will be deemed to be correct.
+                </p>
+                <img src='/afex_integration/static/image/afex_logo.png'/>
+                <p>
+                    The foreign exchange transaction service is provided by Associated Foreign Exchange Australia Pty Limited
+                    ABN 119 392 586 and AFSL 305246 (trading as "AFEX").
+                    <br/>
+                    <br/>
+                    Where foreign exchange transaction information is provided on this website, it has been prepared by AFEX
+                    without considering the investment objectives, financial situation and particular needs of any person. Before
+                    acting on any general advice on this website, you should consider its appropriateness to your circumstances.
+                    To the extent permitted by law, AFEX makes no warranty as to the accuracy or suitability of this information
+                    and accepts no responsibility for errors or misstatements, negligent or otherwise. Any quotes given are
+                    indicative only. The information may be based on assumptions or market conditions and may change without
+                    notice. No part of the information is to be construed as solicitation to make a financial investment.
+                    <br/>
+                    <br/>
+                    For further details, refer to AFEX's
+                    <a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>
+                </p>
+            </div>
+        </button>
+    </field>
+</record>
+
+
 <record model="ir.ui.view" id="view_account_payment_form">
     <field name="name">Account Payment with Afex</field>
     <field name="model">account.payment</field>
@@ -91,6 +179,14 @@
         <field name="journal_id" position="after">
             <field name="afex_trade_no" readonly="1" attrs="{'invisible':[('afex_trade_no','=',False)]}"/>
         </field>
+        <xpath expr="//field[@name='journal_id']/../.." position="after">
+            <group attrs="{'invisible': [('is_afex', '=', False)]}">
+                <field name='is_afex' invisible='1'/>
+                <field name='afex_invoice_id'/>
+                <field name='afex_fee_invoice_id' attrs="{'invisible': [('afex_fee_invoice_id', '=', False)]}"/>
+                <field name="afex_ssi_details_display" colspan='2' nolabel='1'/>
+            </group>
+        </xpath>
     </field>
 </record>
 
@@ -99,11 +195,9 @@
     <field name="model">account.invoice</field>
     <field name="inherit_id" ref="account.invoice_supplier_form"/>
     <field name="arch" type="xml">
-        <field name="currency_id" position="after">
-            <field name="afex_ssi_currency" invisible="1"/>
-        </field>
         <xpath expr='//notebook//page[1]' position="after">
-        <page name="afex_ssi" string="AFEX Information" attrs="{'invisible':[('afex_ssi_currency','=',False)]}">
+        <page name="afex_ssi" string="AFEX Information" attrs="{'invisible':[('is_afex','=',False)]}">
+            <field name='is_afex' invisible='1'/>
             <field name="afex_ssi_details_display"/>
         </page>
         </xpath>

@@ -2,7 +2,7 @@
 
 {
     "name": "AFEX International Payments",
-    "version": "9.0.2.0",
+    "version": "9.0.3.0",
     "summary": "Integration with AFEX Foreign Exchange, by WilldooIT",
     "description": """
 Odoo AFEX International Payments
