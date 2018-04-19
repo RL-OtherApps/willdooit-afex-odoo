@@ -1,5 +1,5 @@
 =================
-Odoo AFEX International Payments
+AFEX Global Payments for Businesses
 =================
 
 Introduction
@@ -18,25 +18,41 @@ AFEX homepage: `https://www.afex.com/ <https://www.afex.com/>`_
 Setup
 -----
 
+- *Accounting > Configuration > Settings > Configure your company data >
+    Configuration Tab* or *Settings > Users > Companies > Configuration Tab*
+
+    For each Odoo defined company which will trade with AFEX:
+
+      - **AFEX API Key** - Supplied by AFEX and entered here.
+
+
 - *Accounting > Configuration > Journals*
 
-    A new Cash Journal can be created which will be used for AFEX payments.
+    A new Cash Journal can be created which will be used for AFEX payments. A
+    single journal will suffice if settlement will always be in the local
+    currency. If settlement will be made in other currencies, then a journal
+    will be required per currency. The settlement currency is the currency
+    used to pay AFEX, not the currency used to pay the vendor.
 
     * **Journal Entries**
 
       - **Default Debit / Credit Account** - G/L account for AFEX clearing.
-          Should be set up as a reconcilable liability account for easy
-          reconciliation with the bank statement.
+          Should be set up as a non reconcilable liability account which is
+          reviewed periodically. It could also be a revenue or expense account.
+          The balance which accumulates in here will be the difference between
+          the Odoo anticipated settlement from stored currency rates, and the
+          actual settlement value to AFEX. It may be treated as a straight
+          expense, or it may be allocated to other areas of the accounts.
 
-      - **Currency** - Leave blank - Journal will use the company currency when
-          posting to the General Ledger.
+      - **Currency** - Leave blank for settlement in the company currency,
+          or enter a currency if settling in another in-between currency. The
+          payment will use the currency from here when posting to the clearing
+          account defined above.
 
       - **AFEX Journal** - Enabled.
 
-      - **AFEX API Key** - Supplied by AFEX and entered here.
-
-      - **AFEX Difference Account** - Select an account for exchange
-          gains/losses.
+      -**AFEX Invoicing Partner** - This is the partner to which the liability
+          will be posted when making an AFEX trade.
 
       - **AFEX Fees Account** - Select an account for expensing AFEX fees.
 
@@ -46,7 +62,7 @@ Setup
 
       - **Payment Methods** - Enable manual.
 
-- *Partner Screen > Sales and Purchases Tab > Bank Accounts(s)*
+- *Partner > Sales and Purchases Tab > Bank Account(s)*
 
     Vendors have an option available against their bank accounts to allow
     them to be marked as bank accounts to be associated with AFEX.  There
@@ -70,7 +86,7 @@ Setup
 
     Other required values are picked up from the partner address area.
 
-- *Partner Screen*
+- *Partner*
 
     Partners have an **AFEX Sync** option available in their **Action Drop
     Down** to allow the Partner and their Bank Accounts to be synced to AFEX,
@@ -100,15 +116,20 @@ Setup
     * **Value** - the URL *(e.g. https://demo.api.afex.com:7890/api/)*
 
 
-Usage
------
+- *Accounting > Purchases > Vendor Bills > [Open Bill] > Register Payment* or
+    *Accounting > Purchases > Vendor Bills > [Select Multiple] > [Action Drop
+    Down and Register Payment]
 
-- *Accounting > Purchases > Vendor Bills > [Open Bill] > Register Payment*
+    To make a foreign currency payment using an **AFEX Journal** for a vendor
+    who has an associated **confirmed AFEX Beneficiary**.  Choose the correct
+    payment journal, which will determine the settlement currency. The payment
+    amount and currency can be chosen. If part or overpaying a single bill, an
+    option will be given to choose if the balance is to be kept open or if
+    it is to be written off.
 
-    When a payment is made using an **AFEX Journal** for a vendor who has an
-    associated **confirmed AFEX Beneficiary**, the system will retrieve the
-    exchange rate from AFEX, update the **payment amount** using the exchange
-    rate, and display quote information on the payment screen.
+    Retrieving a quote, the system will retrieve the exchange rate from AFEX
+    and display the **payment amount** conversion using the exchange rate.
+    Quote information is displayed on the payment screen.
 
     If applicable, the AFEX fee amount and fee currency will be displayed as
     well.
@@ -119,15 +140,19 @@ Usage
     quote.
 
     When the payment is **Validated**, the system will send information to AFEX
-    to book a payment with the vendor.  If the fee currency is the same as the
-    settlement currency, then the fee will be included in the payment journal.
+    to book and schedule a payment to the vendor.
 
-    Information about the booked payment will be displayed on the bill.
+    The vendor will be marked as paid to the level selected, and a bill will be
+    raised to the AFEX partner. If the fee is the same currency as the
+    settlement currency, it will be included in the same bill. Otherwise, a
+    separate bill will be raised for the fee.
 
-    AFEX will require payment within a required time bracket *(which is
-    affected by Currency)* in order to make payment to the vendor.
+    Information about the booked payment will be displayed on the AFEX bill,
+    and on the Odoo payment record.
+
+    To ensure the foreign currency payment can be sent to the vendor on the
+    scheduled date, you must remit settlement funding for the payment to AFEX
+    within 24 hours of booking the payment.
 
     Upon AFEX receiving payment, the booked payment to the vendor will be
     confirmed for the scheduled time.
-
-

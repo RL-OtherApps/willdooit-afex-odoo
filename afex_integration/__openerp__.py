@@ -5,8 +5,8 @@
     "version": "9.0.3.0",
     "summary": "Integration with AFEX Foreign Exchange, by WilldooIT",
     "description": """
-Odoo AFEX International Payments
-================================
+AFEX Global Payments for Businesses
+===================================
 
 This module allows vendor banks to be synchronised with AFEX to create AFEX
 Beneficiaries. It also allows payments within Odoo to book payments to vendors
@@ -23,7 +23,7 @@ Setup
 - *Accounting > Configuration > Settings > Configure your company data >
     Configuration Tab* or *Settings > Users > Companies > Configuration Tab*
 
-    For each Odoo defined company which will trade with AFEX.
+    For each Odoo defined company which will trade with AFEX:
 
       - **AFEX API Key** - Supplied by AFEX and entered here.
 
@@ -32,7 +32,7 @@ Setup
     A new Cash Journal can be created which will be used for AFEX payments. A
     single journal will suffice if settlement will always be in the local
     currency. If settlement will be made in other currencies, then a journal
-    will be required per currency.  The settlement currency is the currency
+    will be required per currency. The settlement currency is the currency
     used to pay AFEX, not the currency used to pay the vendor.
 
     * **Journal Entries**
@@ -63,7 +63,7 @@ Setup
 
       - **Payment Methods** - Enable manual.
 
-- *Partner > Sales and Purchases Tab > Bank Accounts(s)*
+- *Partner > Sales and Purchases Tab > Bank Account(s)*
 
     Vendors have an option available against their bank accounts to allow
     them to be marked as bank accounts to be associated with AFEX.  There
