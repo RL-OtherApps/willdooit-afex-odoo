@@ -29,6 +29,48 @@ For further details, refer to AFEX's
 </p>
 '''
 
+AFEX_TRADE_TERMS = '''
+<br/>
+<p>
+You acknowledge that by clicking on VALIDATE you have agreed to execute the
+transaction based on the market rates which may differ from the rates initially
+quoted, and you will be bound to the
+<a target="_blank" href="https://www.afex.com/docs/australia_terms&amp;conditions.pdf">AFEX Terms and Conditions</a>,
+<a target="_blank" href="https://www.afex.com/docs/australia/australian_product_disclosure_statement.pdf">Product Disclosure Statement</a>
+and
+<a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>.
+This transaction will be binding on you when AFEX processes your instructions
+made through this website. You acknowledge that your transaction may not be
+processed immediately by AFEX through this website. When AFEX does process
+your Instructions, you will receive a Trade Confirmation via email. The Trade
+Confirmation constitutes an error correction mechanism only; if you do not
+contact AFEX within 24 hours of receipt of the Trade Confirmation, the
+Transaction details will be deemed to be correct.
+</p>
+<img src='/afex_integration/static/image/afex_logo.png'/>
+<p>
+The foreign exchange transaction service is provided by Associated Foreign
+Exchange Australia Pty Limited ABN 119 392 586 and AFSL 305246 (trading as
+"AFEX").
+<br/>
+<br/>
+Where foreign exchange transaction information is provided on this website,
+it has been prepared by AFEX without considering the investment objectives,
+financial situation and particular needs of any person. Before acting on any
+general advice on this website, you should consider its appropriateness to your
+circumstances. To the extent permitted by law, AFEX makes no warranty as to the
+accuracy or suitability of this information and accepts no responsibility for
+errors or misstatements, negligent or otherwise. Any quotes given are
+indicative only. The information may be based on assumptions or market
+conditions and may change without notice. No part of the information is to be
+construed as solicitation to make a financial investment.
+<br/>
+<br/>
+For further details, refer to AFEX's
+<a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>
+</p>
+'''
+
 
 class AccountJournal(models.Model):
     _inherit = "account.journal"
@@ -78,7 +120,9 @@ class AccountAbstractPayment(models.AbstractModel):
 #     afex_trade_no = fields.Char(string="AFEX Trade#", copy=False)
 #     afex_rate = fields.Float()
 #     afex_rate_display = fields.Html(
-#         string="AFEX Rate", compute="_afex_rate_display")
+#         string="AFEX Rate", compute='_afex_rate_display')
+#     afex_terms_display = fields.Html(
+#        compute='_afex_terms_display')
 #
 #     afex_stl_currency_id = fields.Many2one('res.currency')
 #     afex_stl_amount = fields.Monetary(
@@ -89,6 +133,16 @@ class AccountAbstractPayment(models.AbstractModel):
 #         string='AFEX Fee Amount', currency_field='afex_fee_currency_id')
 #     afex_fee_currency_id = fields.Many2one(
 #         'res.currency', string='Fee Currency')
+
+#     passed_currency_id = fields.Many2one(
+#         'res.currency')
+
+#     @api.onchange('journal_id')
+#     def _onchange_journal(self):
+#         result = super(AccountRegisterPayments, self)._onchange_journal()
+#         if self.journal_id and self.is_afex and self.passed_currency_id:
+#             self.currency_id = self.passed_currency_id
+#         return result
 
     @api.multi
     def _afex_rate_display(self, obj):
@@ -104,6 +158,14 @@ class AccountAbstractPayment(models.AbstractModel):
                      )
             else:
                 payment.afex_rate_display = ''
+
+    @api.multi
+    def _afex_terms_display(self, obj):
+        for payment in obj:
+            if payment.is_afex:
+                payment.afex_terms_display = AFEX_TRADE_TERMS
+            else:
+                payment.afex_terms_display = ''
 
     @api.multi
     def request_afex_quote(self, obj):
@@ -204,7 +266,9 @@ class AccountRegisterPayments(models.TransientModel):
     afex_trade_no = fields.Char(string="AFEX Trade#", copy=False)
     afex_rate = fields.Float()
     afex_rate_display = fields.Html(
-        string="AFEX Rate", compute="_afex_rate_display")
+        string="AFEX Rate", compute='_afex_rate_display')
+    afex_terms_display = fields.Html(
+       compute='_afex_terms_display')
 
     afex_stl_currency_id = fields.Many2one('res.currency')
     afex_stl_amount = fields.Monetary(
@@ -215,9 +279,33 @@ class AccountRegisterPayments(models.TransientModel):
     afex_fee_currency_id = fields.Many2one(
         'res.currency', string='Fee Currency')
 
+    passed_currency_id = fields.Many2one(
+        'res.currency')
+
+    @api.model
+    def default_get(self, fields):
+        rec = super(AccountRegisterPayments, self).default_get(fields)
+        rec.update({
+            'passed_currency_id': rec['currency_id'],
+            })
+        return rec
+
+    @api.onchange('journal_id')
+    def _onchange_journal(self):
+        result = super(AccountRegisterPayments, self)._onchange_journal()
+        if self.journal_id and self.is_afex and self.passed_currency_id:
+            self.currency_id = self.passed_currency_id
+        return result
+
+    @api.depends('afex_quote_id')
     @api.multi
     def _afex_rate_display(self):
         return self.env['account.abstract.payment']._afex_rate_display(self)
+
+    @api.depends('is_afex')
+    @api.multi
+    def _afex_terms_display(self):
+        return self.env['account.abstract.payment']._afex_terms_display(self)
 
     @api.multi
     def request_afex_quote(self):
@@ -263,7 +351,9 @@ class AccountPayment(models.Model):
     afex_trade_no = fields.Char(string="AFEX Trade#", copy=False)
     afex_rate = fields.Float()
     afex_rate_display = fields.Html(
-        string="AFEX Rate", compute="_afex_rate_display")
+        string="AFEX Rate", compute='_afex_rate_display')
+    afex_terms_display = fields.Html(
+       compute='_afex_terms_display')
 
     afex_stl_currency_id = fields.Many2one('res.currency')
     afex_stl_amount = fields.Monetary(
@@ -275,9 +365,33 @@ class AccountPayment(models.Model):
     afex_fee_currency_id = fields.Many2one(
         'res.currency', string='Fee Currency')
 
+    passed_currency_id = fields.Many2one(
+        'res.currency')
+
+    @api.model
+    def default_get(self, fields):
+        rec = super(AccountPayment, self).default_get(fields)
+        rec.update({
+            'passed_currency_id': rec.get('currency_id', False),
+            })
+        return rec
+
+    @api.onchange('journal_id')
+    def _onchange_journal(self):
+        result = super(AccountPayment, self)._onchange_journal()
+        if self.journal_id and self.is_afex and self.passed_currency_id:
+            self.currency_id = self.passed_currency_id
+        return result
+
+    @api.depends('afex_quote_id')
     @api.multi
     def _afex_rate_display(self):
         return self.env['account.abstract.payment']._afex_rate_display(self)
+
+    @api.depends('is_afex')
+    @api.multi
+    def _afex_terms_display(self):
+        return self.env['account.abstract.payment']._afex_terms_display(self)
 
     @api.multi
     def request_afex_quote(self):
@@ -297,7 +411,7 @@ class AccountPayment(models.Model):
     afex_ssi_details_display = fields.Html(
         compute="afex_ssi", string="SSI Details")
 
-    @api.onchange('amount', 'currency_id', 'journal_id')
+    @api.onchange('amount', 'currency_id', 'journal_id', 'partner_id')
     def _onchange_afex(self):
         self.afex_quote_id = False
 
@@ -329,6 +443,8 @@ class AccountPayment(models.Model):
                  'currency_id': payment.afex_stl_currency_id.id,
                  })
             inv_head._onchange_partner_id()
+            inv_head.date_invoice = inv_head.date_due =\
+                fields.Date.context_today(self)
             inv_head._onchange_payment_term_date_invoice()
             self.env['account.invoice.line'].create(
                 {'invoice_id': inv_head.id,
@@ -350,7 +466,8 @@ class AccountPayment(models.Model):
                          'currency_id': payment.afex_fee_currency_id.id,
                          })
                     inv_fee._onchange_partner_id()
-                    inv_fee._onchange_payment_term_date_invoice()
+                    inv_fee.date_invoice = inv_fee.date_due =\
+                        fields.Date.context_today(self)
                 self.env['account.invoice.line'].create(
                     {'invoice_id': inv_fee and inv_fee.id or inv_head.id,
                      'account_id': payment.journal_id.afex_fee_account_id.id,
