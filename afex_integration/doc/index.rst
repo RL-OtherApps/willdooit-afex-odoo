@@ -1,5 +1,5 @@
 =================
-AFEX Global Payments for Businesses
+AFEX Global Vendor Payments for Businesses
 =================
 
 Introduction
@@ -18,8 +18,7 @@ AFEX homepage: `https://www.afex.com/ <https://www.afex.com/>`_
 Setup
 -----
 
-- *Accounting > Configuration > Settings > Configure your company data >
-    Configuration Tab* or *Settings > Users > Companies > Configuration Tab*
+- *Accounting > Configuration > Settings > Configure your company data > Configuration Tab* or *Settings > Users > Companies > Configuration Tab*
 
     For each Odoo defined company which will trade with AFEX:
 
@@ -116,9 +115,7 @@ Setup
     * **Value** - the URL *(e.g. https://demo.api.afex.com:7890/api/)*
 
 
-- *Accounting > Purchases > Vendor Bills > [Open Bill] > Register Payment* or
-    *Accounting > Purchases > Vendor Bills > [Select Multiple] > [Action Drop
-    Down and Register Payment]
+- *Accounting > Purchases > Vendor Bills > [Open Bill] > Register Payment* or *Accounting > Purchases > Vendor Bills > [Select Multiple] > [Action Drop Down and Register Payment]*
 
     To make a foreign currency payment using an **AFEX Journal** for a vendor
     who has an associated **confirmed AFEX Beneficiary**.  Choose the correct
