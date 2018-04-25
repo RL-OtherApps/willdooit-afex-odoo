@@ -67,17 +67,14 @@ class ResPartnerBank(models.Model):
     afex_unique_id = fields.Char(
         copy=False
     )
-
-    def afex_partner_reset(self):
-        self.filtered(lambda b: b.is_afex).mapped('partner_id').write(
-            {'afex_sync_status': 'needed'})
-
-    @api.model
-    def create(self, vals):
-        result = super(ResPartnerBank, self).create(vals)
-        if vals.get('is_afex'):
-            result.afex_partner_reset()
-        return result
+    afex_sync_status = fields.Selection(
+        [('needed', 'Sync Needed'),
+         ('done', 'Synchronised'),
+         ],
+        string='AFEX Status',
+        default='needed',
+        readonly=True
+        )
 
     @api.multi
     def write(self, vals):
@@ -86,17 +83,9 @@ class ResPartnerBank(models.Model):
                 raise UserError(
                     _('Cannot change Bank Currency for a Bank which is'
                       ' already synchronised with AFEX'))
-        # old mappings
-        self.afex_partner_reset()
-        result = super(ResPartnerBank, self).write(vals)
-        if 'is_afex' in vals or 'partner_id' in vals:
-            self.afex_partner_reset
-        return result
-
-    @api.multi
-    def unlink(self):
-        self.afex_partner_reset()
-        return super(ResPartnerBank, self).unlink()
+        if 'afex_sync_status' not in vals:
+            vals['afex_sync_status'] = 'needed'
+        return super(ResPartnerBank, self).write(vals)
 
     def sync_beneficiary_afex(self):
         for bank in self:
@@ -112,25 +101,25 @@ class ResPartnerBank(models.Model):
             # if bank has afex id or just linked, then send details
             if bank.afex_unique_id:
                 bank.update_beneficiary_afex()
-                continue
+            else:
+                new_afex_id = '%s%s%s' % \
+                    (bank.partner_id.id, bank.currency_id.name or 'x', bank.id)
 
-            new_afex_id = '%s%s%s' % \
-                (bank.partner_id.id, bank.currency_id.name or 'x', bank.id)
+                url = "beneficiarycreate"
+                data = bank.return_afex_data()
+                data['VendorId'] = new_afex_id
+                # create new beneficiary
+                response_json = self.env['afex.connector'].afex_response(
+                        url, data=data, post=True)
+                if response_json.get('ERROR', True):
+                    raise UserError(
+                        _('Error while creating beneficiary: %s %s') %
+                        (response_json.get('message', ''),
+                         _(PARTNER_AFEX_DESC_TEXT))
+                    )
 
-            url = "beneficiarycreate"
-            data = bank.return_afex_data()
-            data['VendorId'] = new_afex_id
-            # create new beneficiary
-            response_json = self.env['afex.connector'].afex_response(
-                    url, data=data, post=True)
-            if response_json.get('ERROR', True):
-                raise UserError(
-                    _('Error while creating beneficiary: %s %s') %
-                    (response_json.get('message', ''),
-                     _(PARTNER_AFEX_DESC_TEXT))
-                )
-
-            bank.afex_unique_id = new_afex_id
+                bank.afex_unique_id = new_afex_id
+            bank.afex_sync_status = 'done'
 
     def update_beneficiary_afex_id(self):
         self.ensure_one()
@@ -147,14 +136,14 @@ class ResPartnerBank(models.Model):
                         and item.get('Currency', '') == self.currency_id.name:
                     if not item.get('VendorId'):
                         raise UserError(
-                            _('Vendor name and currency exists on AFEX but '
-                              "it doesn't have a Vendor Id")
+                            _('Vendor name and currency exists on AFEX but'
+                              " it doesn't have a Vendor Id")
                             )
                     if self.search(
                             [('afex_unique_id', '=', item['VendorId'])]):
                         raise UserError(
-                            _('Vendor name and currency exists on AFEX but '
-                              'already linked on Odoo to another beneficiary')
+                            _('Vendor name and currency exists on AFEX but'
+                              ' already linked on Odoo to another beneficiary')
                             )
                     self.afex_unique_id = item['VendorId']
                     break
@@ -237,27 +226,40 @@ class AFEXAddFields(models.Model):
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-    afex_banks = fields.Boolean(compute='_compute_afex_banks')
+    afex_bank_ids = fields.One2many(
+        'res.partner.bank',
+        compute='_compute_afex_banks')
     afex_sync_status = fields.Selection(
         [('needed', 'Sync Needed'),
          ('done', 'Synchronised'),
+         ('na', 'Not Applicable'),
          ],
         string='AFEX Status',
-        default='needed',
-        readonly=True
+        compute='_compute_afex_sync_status'
         )
 
     @api.multi
     def write(self, vals):
+        res = super(ResPartner, self).write(vals)
         if set(vals.keys()) &\
                 set(['name', 'email', 'street', 'city',
                     'country_id', 'state_id', 'company_id']):
-            vals['afex_sync_status'] = 'needed'
-        return super(ResPartner, self).write(vals)
+            for partner in self:
+                partner.afex_bank_ids.write({'afex_sync_status': 'needed'})
+        return res
 
     @api.one
     def _compute_afex_banks(self):
-        self.afex_banks = self.bank_ids.filtered(lambda b: b.is_afex)
+        self.afex_bank_ids = self.bank_ids.filtered(lambda b: b.is_afex)
+
+    @api.one
+    def _compute_afex_sync_status(self):
+        if self.afex_bank_ids:
+            self.afex_sync_status = any(
+                b.afex_sync_status == 'needed' for b in self.afex_bank_ids) \
+                and 'needed' or 'done'
+        else:
+            self.afex_sync_status = 'na'
 
     def afex_bank_for_currency(self, currency):
         self.ensure_one()
@@ -271,20 +273,35 @@ class ResPartner(models.Model):
 
     @api.multi
     def sync_partners_afex(self):
+
+        bank_accounts = self.env['res.partner.bank']
+
         partners = self.browse(self.env.context.get('active_ids') or
                                self.env.context.get('active_id'))
-        if partners.filtered(lambda p: not p.afex_banks or not p.bank_ids):
-            raise UserError(_(
-                'Vendor %s does not have an AFEX Beneficiary Bank account')
-                % partners.filtered(lambda p: not p.afex_banks)[0].name)
         for partner in partners:
             if not partner.name:
-                continue
+                raise UserError(_(
+                    'Vendor encountered with no name'))
             if not partner.supplier:
-                raise UserError(_('AFEX is currently only used for Vendors'))
+                raise UserError(_(
+                    'Partner %s is not a vendor')
+                    % (partner.name,))
             if not partner.company_id:
-                raise UserError(_('Vendor is not linked to a company'))
+                raise UserError(_(
+                    'Vendor %s is not linked to a company')
+                    % (partner.name,))
+            if not partner.afex_bank_ids:
+                raise UserError(_(
+                    'Vendor %s does not have any AFEX Beneficiary Bank'
+                    ' accounts')
+                    % partner.name)
+            partner_banks = partner.bank_ids.filtered(
+                    lambda b: b.is_afex and b.afex_sync_status == 'needed')
+            if not partner_banks:
+                raise UserError(_(
+                    'Vendor %s does not have any Beneficiary Bank accounts'
+                    ' which need to be synchronised')
+                    % partner.name)
+            bank_accounts |= partner_banks
 
-            banks = partner.bank_ids.filtered(lambda z: z.is_afex)
-            banks.sync_beneficiary_afex()
-            partner.afex_sync_status = 'done'
+        bank_accounts.sync_beneficiary_afex()

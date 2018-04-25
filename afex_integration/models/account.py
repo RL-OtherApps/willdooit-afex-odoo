@@ -128,11 +128,6 @@ class AccountAbstractPayment(models.AbstractModel):
 #     afex_stl_amount = fields.Monetary(
 #         string='Settlement Amount', currency_field='afex_stl_currency_id'
 #         )
-#
-#     afex_fee_amount = fields.Monetary(
-#         string='AFEX Fee Amount', currency_field='afex_fee_currency_id')
-#     afex_fee_currency_id = fields.Many2one(
-#         'res.currency', string='Fee Currency')
 
 #     passed_currency_id = fields.Many2one(
 #         'res.currency')
@@ -174,9 +169,6 @@ class AccountAbstractPayment(models.AbstractModel):
 
         Connector = self.env['afex.connector']
         if payment.is_afex:
-            afex_quote_id = False
-            afex_rate = False
-
             stl_currency = payment.journal_id.currency_id or \
                 payment.company_id.currency_id
             currencypair = "%s%s" % (
@@ -199,11 +191,14 @@ class AccountAbstractPayment(models.AbstractModel):
                 raise UserError(
                     _('Error with quote: %s') %
                     (response_json.get('message', ''),))
-            for item in response_json:
-                if item == 'QuoteId':
-                    afex_quote_id = response_json[item]
-                if item == 'Rate':
-                    afex_rate = response_json[item]
+
+            afex_quote_id = response_json.get('QuoteId')
+            afex_terms = response_json.get('Terms')
+            afex_rate =\
+                afex_terms == 'A' and\
+                response_json.get('InvertedRate') or\
+                response_json.get('Rate')
+
             if not afex_quote_id or not afex_rate:
                 raise UserError(_('Could not retrieve a valid AFEX quote'))
             payment_amount = payment.amount / afex_rate
@@ -224,21 +219,24 @@ class AccountAbstractPayment(models.AbstractModel):
                 raise UserError(
                     _('Error while retrieving AFEX Fees: %s') %
                     (response_json.get('message', ''),))
-            # Grab and use first fee - Multiple fees not sent at this time.
-            fee_details = response_json.get('items', [{}])[0]
-            fee_amount = fee_details.get('Amount')
-            afex_fee_currency = \
-                self.env['res.currency'].search(
-                    [('name', '=', fee_details.get('Currency', ''))],
-                    limit=1)
+            afex_fee_amount_ids = [(5, 0, 0)]
+            for fee_details in response_json.get('items', []):
+                fee_amount = fee_details.get('Amount')
+                afex_fee_currency = \
+                    self.env['res.currency'].search(
+                        [('name', '=', fee_details.get('Currency', ''))],
+                        limit=1)
+                afex_fee_amount_ids.append((0, 0, {
+                    'afex_fee_amount': fee_amount,
+                    'afex_fee_currency_id': afex_fee_currency.id,
+                    }))
 
             payment.write(
                 {'afex_quote_id': afex_quote_id,
                  'afex_rate': afex_rate,
                  'afex_stl_currency_id': stl_currency.id,
                  'afex_stl_amount': payment_amount,
-                 'afex_fee_amount': fee_amount,
-                 'afex_fee_currency_id': afex_fee_currency.id,
+                 'afex_fee_amount_ids': afex_fee_amount_ids,
                  }
                 )
 
@@ -274,13 +272,19 @@ class AccountRegisterPayments(models.TransientModel):
     afex_stl_amount = fields.Monetary(
         string='Settlement Amount', currency_field='afex_stl_currency_id')
 
-    afex_fee_amount = fields.Monetary(
-        string='AFEX Fee Amount', currency_field='afex_fee_currency_id')
-    afex_fee_currency_id = fields.Many2one(
-        'res.currency', string='Fee Currency')
+    has_afex_fees = fields.Boolean(
+        compute='_compute_has_afex_fees'
+        )
+    afex_fee_amount_ids = fields.One2many(
+        'account.payment.afex.fee.wiz', 'payment_id',
+        string='AFEX Fee(s)')
 
     passed_currency_id = fields.Many2one(
         'res.currency')
+
+    @api.one
+    def _compute_has_afex_fees(self):
+        self.has_afex_fees = self.afex_fee_amount_ids
 
     @api.model
     def default_get(self, fields):
@@ -334,8 +338,11 @@ class AccountRegisterPayments(models.TransientModel):
             'afex_rate': self.afex_rate,
             'afex_stl_currency_id': self.afex_stl_currency_id.id,
             'afex_stl_amount': self.afex_stl_amount,
-            'afex_fee_amount': self.afex_fee_amount,
-            'afex_fee_currency_id': self.afex_fee_currency_id.id,
+            'afex_fee_amount_ids':
+                [(0, 0, {
+                    'afex_fee_amount': f.afex_fee_amount,
+                    'afex_fee_currency_id': f.afex_fee_currency_id.id,
+                    }) for f in self.afex_fee_amount_ids],
             })
         return result
 
@@ -360,13 +367,19 @@ class AccountPayment(models.Model):
         string='Settlement Amount', currency_field='afex_stl_currency_id'
         )
 
-    afex_fee_amount = fields.Monetary(
-        string='AFEX Fee Amount', currency_field='afex_fee_currency_id')
-    afex_fee_currency_id = fields.Many2one(
-        'res.currency', string='Fee Currency')
+    has_afex_fees = fields.Boolean(
+        compute='_compute_has_afex_fees'
+        )
+    afex_fee_amount_ids = fields.One2many(
+        'account.payment.afex.fee', 'payment_id',
+        string='AFEX Fee(s)')
 
     passed_currency_id = fields.Many2one(
         'res.currency')
+
+    @api.one
+    def _compute_has_afex_fees(self):
+        self.has_afex_fees = self.afex_fee_amount_ids
 
     @api.model
     def default_get(self, fields):
@@ -399,12 +412,16 @@ class AccountPayment(models.Model):
     # Defined here for v9
     # ==============================================================
 
-    afex_invoice_id = fields.Many2one(
+    afex_invoice_ids = fields.One2many(
+        'account.invoice', 'afex_payment_id')
+    afex_stl_invoice_id = fields.Many2one(
         'account.invoice',
         string='AFEX Invoice', readonly=True)
-    afex_fee_invoice_id = fields.Many2one(
+    afex_fee_invoice_ids = fields.One2many(
         'account.invoice',
-        string='AFEX Fee Invoice', readonly=True)
+        string='AFEX Fee Invoice(s)',
+        compute='_compute_fee_invoices',
+        )
 
     afex_ssi_account_number = fields.Char(copy=False)
     afex_ssi_details = fields.Html(copy=False)
@@ -414,6 +431,11 @@ class AccountPayment(models.Model):
     @api.onchange('amount', 'currency_id', 'journal_id', 'partner_id')
     def _onchange_afex(self):
         self.afex_quote_id = False
+
+    @api.one
+    def _compute_fee_invoices(self):
+        self.afex_fee_invoice_ids =\
+            self.afex_invoice_ids - self.afex_stl_invoice_id
 
     @api.multi
     def refresh_quote(self):
@@ -434,6 +456,12 @@ class AccountPayment(models.Model):
 
     def create_afex_trade(self):
         for payment in self.filtered(lambda p: p.is_afex):
+            if not payment.afex_rate or \
+                    not payment.afex_quote_id or \
+                    payment.afex_quote_id < 1:
+                raise UserError(
+                    _('Invalid AFEX Quote - Please re-quote before attempting'
+                      ' payment.'))
 
             inv_head = self.env['account.invoice'].with_context(
                 type='in_invoice').create(
@@ -454,34 +482,32 @@ class AccountPayment(models.Model):
                  'quantity': 1,
                  })
 
-            inv_fee = False
-            if payment.afex_fee_amount:
-                if payment.afex_fee_currency_id != \
-                        payment.afex_stl_currency_id:
+            invoices = {
+                payment.afex_stl_currency_id.id: inv_head
+                }
+            for fee in payment.afex_fee_amount_ids:
+                if fee.afex_fee_currency_id.id in invoices:
+                    inv_fee = invoices[fee.afex_fee_currency_id.id]
+                else:
                     inv_fee = self.env['account.invoice'].with_context(
                         type='in_invoice').create(
                         {'partner_id': payment.journal_id.afex_partner_id.id,
                          'user_id': self.env.user.id,
                          'company_id': payment.company_id.id,
-                         'currency_id': payment.afex_fee_currency_id.id,
+                         'currency_id': fee.afex_fee_currency_id.id,
                          })
                     inv_fee._onchange_partner_id()
                     inv_fee.date_invoice = inv_fee.date_due =\
                         fields.Date.context_today(self)
+                    invoices[fee.afex_fee_currency_id.id] = inv_fee
                 self.env['account.invoice.line'].create(
-                    {'invoice_id': inv_fee and inv_fee.id or inv_head.id,
+                    {'invoice_id': inv_fee.id,
                      'account_id': payment.journal_id.afex_fee_account_id.id,
                      'name': 'AFEX Transaction Fee',
-                     'price_unit': payment.afex_fee_amount,
+                     'price_unit': fee.afex_fee_amount,
                      'quantity': 1,
                      })
 
-            if not payment.afex_rate or \
-                    not payment.afex_quote_id or \
-                    payment.afex_quote_id < 1:
-                raise UserError(
-                    _('Invalid AFEX Quote - Please re-quote before attempting'
-                      ' payment.'))
             url = "trades/create"
             afex_bank = payment.partner_id.afex_bank_for_currency(
                 payment.currency_id)
@@ -522,15 +548,24 @@ class AccountPayment(models.Model):
                         (ssi_details or '',
                          payment.afex_ssi_account_number or '')
 
-                inv_head.reference = 'AFEX-%s' % (trade_number,)
-                if inv_fee:
-                    inv_fee.reference = 'AFEX Fee-%s' % (trade_number,)
+                for invoice in invoices.values():
+                    if invoice == inv_head:
+                        invoice.reference = 'AFEX %s' % (trade_number,)
+                    else:
+                        invoice.reference = 'AFEX Fee [%s] %s' % (
+                            invoice.currency_id.name, trade_number)
 
-            inv_head.signal_workflow('invoice_open')
-            payment.afex_invoice_id = inv_head
-            if inv_fee:
-                inv_fee.signal_workflow('invoice_open')
-                payment.afex_fee_invoice_id = inv_fee
+                for invoice in invoices.values():
+                    invoice.signal_workflow('invoice_open')
+
+            payment.write({
+                'afex_invoice_ids': [
+                    (6, 0,
+                     [i.id for i in invoices.values()
+                      if i != inv_head]
+                     )],
+                'afex_stl_invoice_id': inv_head.id,
+                })
 
     def afex_ssi(self):
         for payment in self:
@@ -548,11 +583,11 @@ class AccountPayment(models.Model):
                      payment.afex_stl_currency_id.name,
                      payment.afex_stl_amount,
                      )
-                if payment.afex_fee_amount:
+                for fee in payment.afex_fee_amount_ids:
                     payment_amounts = '%s<p>Fee Amount (%s): %.2f</p>' %\
                         (payment_amounts,
-                         payment.afex_fee_currency_id.name,
-                         payment.afex_fee_amount,
+                         fee.afex_fee_currency_id.name,
+                         fee.afex_fee_amount,
                          )
                 payment.afex_ssi_details_display = \
                     " ".join(
@@ -563,18 +598,42 @@ class AccountPayment(models.Model):
                          AFEX_TERMS_AND_COND])
 
 
+class AccountPaymentAfexFee(models.Model):
+    _name = 'account.payment.afex.fee'
+    _description = 'Account Payment Afex Fee'
+
+    payment_id = fields.Many2one(
+        'account.payment', ondelete='cascade')
+    afex_fee_amount = fields.Monetary(
+        string='AFEX Fee Amount', currency_field='afex_fee_currency_id')
+    afex_fee_currency_id = fields.Many2one(
+        'res.currency', string='Fee Currency')
+
+
+class AccountPaymentAfexFeeWiz(models.TransientModel):
+    _name = 'account.payment.afex.fee.wiz'
+    _description = 'Account Payment Afex Fee Wiz'
+
+    payment_id = fields.Many2one(
+        'account.register.payments')
+    afex_fee_amount = fields.Monetary(
+        string='AFEX Fee Amount', currency_field='afex_fee_currency_id')
+    afex_fee_currency_id = fields.Many2one(
+        'res.currency', string='Fee Currency')
+
+
 class AccountInvoice(models.Model):
     _inherit = "account.invoice"
 
-    afex_source_ids = fields.One2many(
-        'account.payment', 'afex_invoice_id',
+    afex_payment_id = fields.Many2one(
+        'account.payment',
         string='AFEX Source',
         readonly=True)
     is_afex = fields.Boolean(
-        related=['afex_source_ids',
+        related=['afex_payment_id',
                  'is_afex'],
         readonly=True)
     afex_ssi_details_display = fields.Html(
-        related=['afex_source_ids',
+        related=['afex_payment_id',
                  'afex_ssi_details_display'],
         string="SSI Details", readonly=True)

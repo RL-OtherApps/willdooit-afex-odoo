@@ -10,6 +10,7 @@
         <xpath expr='//field[@name="company_id"]/..' position="after">
             <group>
                 <field name="is_afex"/>
+                <field name="afex_sync_status" attrs="{'invisible':[('is_afex','=',False)]}"/>
                 <field name="afex_corporate" attrs="{'invisible':[('is_afex','=',False)]}"/>
                 <field name="afex_bank_country_id" attrs="{'invisible':[('is_afex','=',False)]}"/>
                 <field name="afex_int_bank_country_id" attrs="{'invisible':[('is_afex','=',False)]}"/>
@@ -40,8 +41,7 @@
     <field name="inherit_id" ref="base.view_partner_form"/>
     <field name="arch" type="xml">
         <xpath expr='//group[@name="purchase"]/field[@name="supplier"]' position="after">
-            <field name='afex_banks' invisible='1'/>
-            <field name="afex_sync_status" attrs="{'invisible': [('afex_banks', '=', False)]}"/>
+            <field name="afex_sync_status" attrs="{'invisible': ['!', ('afex_sync_status', 'in', ('done', 'needed'))]}"/>
         </xpath>
     </field>
 </record>
