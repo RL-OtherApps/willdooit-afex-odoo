@@ -526,10 +526,11 @@ class AccountPayment(models.Model):
                     (response_json.get('message', ''),))
             trade_number = response_json.get('TradeNumber', False)
             if trade_number:
-                payment.afex_trade_no = trade_number
-                payment.afex_ssi_account_number = \
+                ssi_account_number = payment.company_id.afex_api_key and \
                     len(payment.company_id.afex_api_key) > 8 and \
                     payment.company_id.afex_api_key[0:8] or ''
+                payment.afex_trade_no = trade_number
+                payment.afex_ssi_account_number = ssi_account_number
 
                 ssi_details = ''
                 url = "ssi/GetSSI?Currency=%s" % (
@@ -546,14 +547,21 @@ class AccountPayment(models.Model):
                         "%s<p>Please remember to include the AFEX Account"\
                         " Number <%s> in remittance information.</p>" % \
                         (ssi_details or '',
-                         payment.afex_ssi_account_number or '')
+                         ssi_account_number
+                         )
 
                 for invoice in invoices.values():
                     if invoice == inv_head:
-                        invoice.reference = 'AFEX %s' % (trade_number,)
+                        invoice.reference = '%s %s' % (
+                            ssi_account_number,
+                            trade_number
+                            )
                     else:
-                        invoice.reference = 'AFEX Fee [%s] %s' % (
-                            invoice.currency_id.name, trade_number)
+                        invoice.reference = 'Fee[%s] %s %s' % (
+                            invoice.currency_id.name,
+                            ssi_account_number,
+                            trade_number
+                            )
 
                 for invoice in invoices.values():
                     invoice.signal_workflow('invoice_open')

@@ -128,7 +128,7 @@ Setup
     and display the **payment amount** conversion using the exchange rate.
     Quote information is displayed on the payment screen.
 
-    If applicable, the AFEX fee amount and fee currency will be displayed as
+    If applicable, the AFEX fee amount(s) and currency will be displayed as
     well.
 
     Each **Payment Quote** is valid for 30 seconds.
@@ -140,9 +140,9 @@ Setup
     to book and schedule a payment to the vendor.
 
     The vendor will be marked as paid to the level selected, and a bill will be
-    raised to the AFEX partner. If the fee is the same currency as the
-    settlement currency, it will be included in the same bill. Otherwise, a
-    separate bill will be raised for the fee.
+    raised to the AFEX partner. Any fee(s) in the same currency as the
+    settlement currency will be included in the same bill. Otherwise, separate
+    bill(s) will be raised for the fee(s).
 
     Information about the booked payment will be displayed on the AFEX bill,
     and on the Odoo payment record.
