@@ -276,8 +276,6 @@ class ResPartner(models.Model):
 
         bank_accounts = self.env['res.partner.bank']
 
-        partners = self.browse(self.env.context.get('active_ids') or
-                               self.env.context.get('active_id'))
         for partner in partners:
             if not partner.name:
                 raise UserError(_(
