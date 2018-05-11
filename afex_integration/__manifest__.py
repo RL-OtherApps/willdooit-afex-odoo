@@ -22,7 +22,8 @@ Setup
 -----
 
 - *Accounting > Configuration > Settings > Configure your company data >
-    Configuration Tab* or *Settings > Users > Companies > Configuration Tab*
+    General Information Tab* or *Settings > Users > Companies >
+    General Information Tab*
 
     For each Odoo defined company which will trade with AFEX:
 
@@ -53,7 +54,7 @@ Setup
 
       - **AFEX Journal** - Enabled.
 
-      -**AFEX Invoicing Partner** - This is the partner to which the liability
+      - **AFEX Invoicing Partner** - This is the partner to which the liability
           will be posted when making an AFEX trade.
 
       - **AFEX Fees Account** - Select an account for expensing AFEX fees.
@@ -75,7 +76,7 @@ Setup
     * **Currency**
 
     Other values will depend on the beneficiary.  Generally, attempting to sync
-    beneficiaries wity incomplete information will tell you of missing required
+    beneficiaries with incomplete information will tell you of missing required
     data, but it varies due to many factors.
 
     * **AFEX Corporate** - If the beneficiary is not an individual.

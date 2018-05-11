@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from openerp import models, fields, api, _
-from openerp.exceptions import UserError, ValidationError
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError, ValidationError
 
 
 AFEX_ADD_SYNC_FIELDS = [
@@ -276,7 +276,7 @@ class ResPartner(models.Model):
 
         bank_accounts = self.env['res.partner.bank']
 
-        for partner in partners:
+        for partner in self:
             if not partner.name:
                 raise UserError(_(
                     'Vendor encountered with no name'))
