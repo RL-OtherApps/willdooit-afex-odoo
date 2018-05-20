@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-
-import afex
-import company
-import account
-import partner
+from . import afex
+from . import company
+from . import account
+from . import partner
