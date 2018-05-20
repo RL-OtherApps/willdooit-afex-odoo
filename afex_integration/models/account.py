@@ -439,24 +439,37 @@ class AccountPayment(models.Model):
                 payment.afex_trade_no = trade_number
                 payment.afex_ssi_account_number = ssi_account_number
 
-                ssi_details = ''
-                url = "ssi/GetSSI?Currency=%s" % (
-                    payment.afex_stl_currency_id.name,)
+                ssi_details = []
+                for currency in payment.afex_stl_currency_id\
+                        | payment.afex_fee_amount_ids.mapped(
+                            'afex_fee_currency_id'):
+                    url = "ssi/GetSSI?Currency=%s" % (
+                        currency.name,)
 
-                response_json = self.env['afex.connector'].afex_response(url)
-                if not response_json.get('ERROR', True):
-                    instructions = [x['PaymentInstructions']
-                                    for x in response_json.get('items', [])
-                                    if x.get('PaymentInstructions')]
-                    if instructions:
-                        ssi_details = '<br/>'.join(instructions).replace(
-                            '\r', '<br/>')
-                    payment.afex_ssi_details = \
-                        "%s<p>Please remember to include the AFEX Account"\
-                        " Number <%s> in remittance information.</p>" % \
-                        (ssi_details or '',
-                         ssi_account_number
-                         )
+                    response_json = self.env['afex.connector'].afex_response(
+                        url)
+                    if not response_json.get('ERROR', True):
+                        instructions = [
+                            x['PaymentInstructions']
+                            for x in response_json.get('items', [])
+                            if x.get('PaymentInstructions')]
+                        if instructions:
+                            ssi_details.append(
+                                '<strong>Instructions for %s Amount:</strong>'
+                                '<br/>%s' %
+                                (currency.name,
+                                    '<br/>'.join(instructions).replace(
+                                        '\r', '<br/>'
+                                        )
+                                 )
+                                )
+
+                payment.afex_ssi_details = \
+                    "%s<p><strong>Please remember to include the AFEX Account"\
+                    " Number <%s> in remittance information.</strong></p>" % \
+                    ('<br/>'.join(ssi_details),
+                     ssi_account_number
+                     )
 
                 for invoice in invoices.values():
                     if invoice == inv_head:

@@ -21,7 +21,7 @@
     <field name="arch" type="xml">
         <field name="currency_id" position="after">
             <field name="afex_journal" attrs="{'invisible': [('type', '!=', 'cash')]}"/>
-            <field name="afex_partner_id" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
+            <field name="afex_partner_id" domain="[('supplier', '=', True)]" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}" context="{'default_is_company': True, 'default_supplier': True, 'default_customer': False}"/>
             <field name="afex_fee_account_id" attrs="{'invisible':[('afex_journal','=',False)], 'required':[('afex_journal','=',True)]}"/>
         </field>
     </field>
