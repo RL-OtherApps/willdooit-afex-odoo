@@ -8,7 +8,7 @@
     <field name="inherit_id" ref="base.view_company_form"/>
     <field name="arch" type="xml">
         <field name="currency_id" position="after">
-            <field name="afex_api_key" groups='account.group_account_user' password="True"/>
+            <field name="afex_api_key" groups='account.group_account_manager' password="True"/>
         </field>
     </field>
 </record>
@@ -57,12 +57,12 @@
             <field name="afex_quote_id" invisible="1"/>
             <field name="afex_rate_display" readonly="1" attrs="{'invisible':[('is_afex','=',False)]}"/>
         </div>
-        <button name="post" position="before">
+        <button name="action_validate_invoice_payment" position="before">
             <button name="refresh_quote" string="Quote" type="object" attrs="{'invisible':['|', ('is_afex', '=', False), ('afex_quote_id', '>', 0)]}" class="btn-primary"/>
             <button name="refresh_quote" string="Re-Quote" type="object" attrs="{'invisible':['|', ('is_afex', '=', False), '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}"/>
         </button>
 
-        <button name="post" position='attributes'>
+        <button name="action_validate_invoice_payment" position='attributes'>
             <attribute name='attrs'>{'invisible': [('is_afex', '=', True), '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}</attribute>
         </button>
 
@@ -104,12 +104,12 @@
             <field name="afex_rate_display" readonly="1" attrs="{'invisible':[('is_afex','=',False)]}"/>
         </field>
 
-        <button name="create_payment" position="before">
+        <button name="create_payments" position="before">
             <button name="refresh_quote" string="Quote" type="object" attrs="{'invisible':['|', ('is_afex', '=', False), ('afex_quote_id', '>', 0)]}" class="btn-primary"/>
             <button name="refresh_quote" string="Re-Quote" type="object" attrs="{'invisible':['|', ('is_afex', '=', False), '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}"/>
         </button>
 
-        <button name="create_payment" position='attributes'>
+        <button name="create_payments" position='attributes'>
             <attribute name='attrs'>{'invisible': [('is_afex', '=', True), '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}</attribute>
         </button>
 

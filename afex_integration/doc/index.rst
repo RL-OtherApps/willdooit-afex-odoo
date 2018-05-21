@@ -18,7 +18,7 @@ AFEX homepage: `https://www.afex.com/ <https://www.afex.com/>`_
 Setup
 -----
 
-- *Accounting > Configuration > Settings > Configure your company data > General Information Tab* or *Settings > Users > Companies > General Information Tab*
+- *Settings > Users & Companies > Companies > General Information Tab*
 
     For each Odoo defined company which will trade with AFEX:
 
