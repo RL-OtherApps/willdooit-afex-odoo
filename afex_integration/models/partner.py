@@ -131,22 +131,22 @@ class ResPartnerBank(models.Model):
                     _('Error while checking existing beneficiaries: %s') %
                     (response_json.get('message', ''),)
                     )
-            for item in response_json.get('items', []):
-                if item.get('Name', '') == self.partner_id.name \
-                        and item.get('Currency', '') == self.currency_id.name:
-                    if not item.get('VendorId'):
-                        raise UserError(
-                            _('Vendor name and currency exists on AFEX but'
-                              " it doesn't have a Vendor Id")
-                            )
-                    if self.search(
-                            [('afex_unique_id', '=', item['VendorId'])]):
-                        raise UserError(
-                            _('Vendor name and currency exists on AFEX but'
-                              ' already linked on Odoo to another beneficiary')
-                            )
-                    self.afex_unique_id = item['VendorId']
-                    break
+        for item in response_json.get('items', []):
+            if item.get('Name', '') == self.partner_id.name \
+                    and item.get('Currency', '') == self.currency_id.name:
+                if not item.get('VendorId'):
+                    raise UserError(
+                        _('Vendor name and currency exists on AFEX but'
+                          " it doesn't have a Vendor Id")
+                        )
+                if self.search(
+                        [('afex_unique_id', '=', item['VendorId'])]):
+                    raise UserError(
+                        _('Vendor name and currency exists on AFEX but'
+                          ' already linked on Odoo to another beneficiary')
+                        )
+                self.afex_unique_id = item['VendorId']
+                break
 
     def update_beneficiary_afex(self):
         self.ensure_one()
