@@ -300,8 +300,9 @@ class AccountRegisterPayments(models.TransientModel):
                 "type": "ir.actions.do_nothing",
         }
 
-    def get_payment_vals(self):
-        result = super(AccountRegisterPayments, self).get_payment_vals()
+    def _prepare_payment_vals(self, invoices):
+        result = super(
+            AccountRegisterPayments, self)._prepare_payment_vals(invoices)
         result.update({
             'afex_quote_id': self.afex_quote_id,
             'afex_rate': self.afex_rate,
