@@ -181,19 +181,14 @@ class ResPartnerBank(models.Model):
                 'BankAccountNumber': self.acc_number or '',
                 'RemittanceLine1': partner.company_id.name or '',
                 'HighLowValue': '1',  # default as high value
-                }
+
+                'Corporate': self.afex_corporate,
+                'BeneficiaryAddressLine2': partner.street2 or '',
+                'BankCountryCode': self.afex_bank_country_id.code or '',
+                'IntermediaryBankCountryCode':
+                self.afex_int_bank_country_id.code or '',                }
 
         # optional data - only provided if entered
-        if partner.street2:
-            data['BeneficiaryAddressLine2'] = partner.street2
-        if self.afex_bank_country_id:
-            data['BankCountryCode'] = \
-                self.afex_bank_country_id.code
-        if self.afex_int_bank_country_id:
-            data['IntermediaryBankCountryCode'] = \
-                self.afex_int_bank_country_id.code
-        if self.afex_corporate:
-            data['Corporate'] = self.afex_corporate
         for line in self.add_afex_info_ids:
             data[line.field] = line.value
         return data
