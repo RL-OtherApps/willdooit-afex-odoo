@@ -67,7 +67,7 @@
         </button>
 
         <button special="cancel" position="after">
-            <div id="afex_tandc" attrs="{'invisible':[('is_afex','=',False)]}" style="font-size:x-small;">
+            <div id="afex_tandc" attrs="{'invisible':['|', '|', ('is_afex','=',False), ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}" style="font-size:x-small;">
                 <field name='afex_terms_display' readonly='1'/>
             </div>
         </button>
@@ -114,7 +114,7 @@
         </button>
 
         <button special="cancel" position="after">
-            <div id="afex_tandc" attrs="{'invisible':[('is_afex','=',False)]}" style="font-size:x-small;">
+            <div id="afex_tandc" attrs="{'invisible':['|', '|', ('is_afex','=',False), ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}" style="font-size:x-small;">
                 <field name='afex_terms_display' readonly='1'/>
             </div>
         </button>
@@ -168,7 +168,7 @@
         </button>
 
         <xpath expr='//field[@name="payment_type"]/../..' position="after">
-            <div id="afex_tandc" attrs="{'invisible':['|', ('is_afex','=',False), ('state', '!=', 'draft')]}" style="font-size:x-small;">
+            <div id="afex_tandc" attrs="{'invisible':['|', '|', '|', ('is_afex','=',False), ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0), ('state', '!=', 'draft')]}" style="font-size:x-small;">
                 <field name='afex_terms_display' readonly='1'/>
             </div>
         </xpath>
