@@ -273,12 +273,17 @@ class AccountAbstractPayment(models.AbstractModel):
         for payment in self.filtered(lambda p: p.is_afex):
             afex_bank = payment.partner_id.afex_bank_for_currency(
                 payment.currency_id)
-
             if not afex_bank.afex_unique_id:
                 raise UserError(
                     _('Partner [%s] currency [%s] has not been synced with '
                       'AFEX') % (payment.partner_id.name,
                                  payment.currency_id.name))
+            if payment.partner_id.afex_sync_status != 'done' or\
+                    afex_bank.afex_sync_status != 'done':
+                raise UserError(
+                    _('Partner [%s] needs to be resynced with AFEX.') %
+                    (payment.partner_id.name,)
+                    )
 
 
 class AccountRegisterPayments(models.TransientModel):
@@ -369,6 +374,12 @@ class AccountPayment(models.Model):
                 raise UserError(
                     _('Invalid AFEX Quote - Please re-quote before attempting'
                       ' payment.'))
+
+            if payment.partner_id.afex_sync_status != 'done':
+                raise UserError(
+                    _('Partner needs to be resynced with AFEX before a trade'
+                      ' can be made.')
+                    )
 
             inv_head = self.env['account.invoice'].with_context(
                 type='in_invoice').create(
