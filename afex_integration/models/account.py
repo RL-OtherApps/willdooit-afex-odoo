@@ -194,6 +194,11 @@ class AccountAbstractPayment(models.AbstractModel):
 
         Connector = self.env['afex.connector']
         if payment.is_afex:
+            if not payment.partner_id:
+                raise UserError(
+                    _('Afex payment can only be made if a single vendor is '
+                      'being paid'))
+
             stl_currency = payment.journal_id.currency_id or \
                 payment.company_id.currency_id
             currencypair = "%s%s" % (
