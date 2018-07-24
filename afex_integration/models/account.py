@@ -196,7 +196,7 @@ class AccountAbstractPayment(models.AbstractModel):
         if payment.is_afex:
             if not payment.partner_id:
                 raise UserError(
-                    _('Afex payment can only be made if a single vendor is '
+                    _('AFEX payment can only be made if a single vendor is '
                       'being paid'))
 
             stl_currency = payment.journal_id.currency_id or \
@@ -274,6 +274,11 @@ class AccountAbstractPayment(models.AbstractModel):
     @api.multi
     def afex_check(self):
         for payment in self.filtered(lambda p: p.is_afex):
+            if not payment.partner_id:
+                raise UserError(
+                    _('AFEX payment can only be made if a single vendor is '
+                      'being paid'))
+
             afex_bank = payment.partner_id.afex_bank_for_currency(
                 payment.currency_id)
             if not afex_bank.afex_unique_id:
