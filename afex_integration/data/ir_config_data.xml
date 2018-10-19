@@ -4,7 +4,8 @@
 
 <record id="config_afex_url" model="ir.config_parameter">
     <field name="key">afex.url</field>
-    <field name="value">https://demo.api.afex.com:7890/api/</field>
+<!--     <field name="value">https://demo.api.afex.com:7890/api/</field> -->
+     <field name="value">https://api.afex.com:7890/api/</field>
 </record>
 
 </data>
