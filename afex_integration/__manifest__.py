@@ -1,6 +1,6 @@
 {
     "name": "AFEX Global Vendor Payments for Businesses",
-    "version": "11.0.1.4",
+    "version": "11.0.1.5",
     "summary": "Make payments to vendors in a foreign currency using AFEX, "
                "by WilldooIT",
     "description": """
@@ -105,10 +105,8 @@ Setup
 
 - *Settings > Technical > System Parameters*
 
-    If a URL is not specified in the System Paramaters then a default demo URL
-    will be used.
-
-    A different URL may be specified in the System Parameters.
+    The URL defaults to the live URL (https://api.afex.com:7890/api/).  If
+    need be, it can be changed in the System Parameters.
 
     * **Key** - afex.url
 
