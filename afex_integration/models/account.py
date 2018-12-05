@@ -201,7 +201,7 @@ class AccountAbstractPayment(models.AbstractModel):
 
             if not afex_quote_id or not afex_rate:
                 raise UserError(_('Could not retrieve a valid AFEX quote'))
-            payment_amount = payment.amount / afex_rate
+            payment_amount = stl_currency.round(payment.amount / afex_rate)
 
             url = "fees"
             afex_bank = payment.partner_id.afex_bank_for_currency(
