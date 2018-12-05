@@ -14,6 +14,7 @@ AFEX_ADD_SYNC_FIELDS = [
     ('IntermediaryBankRoutingCode', 'Intermediary Bank Routing Code'),
     ('IntermediaryBankAccountNumber', 'Intermediary Bank Account Number'),
     ]
+AFEX_ADD_SYNC_LOOKUP = dict(AFEX_ADD_SYNC_FIELDS)
 
 
 # This message is included when an error occurs, and is intended to help users
@@ -177,7 +178,8 @@ class ResPartnerBank(models.Model):
                 'BeneficiaryRegion': partner.state_id.code or '',
                 'BankName': self.bank_id.name or '',
                 'BankAccountNumber': self.acc_number or '',
-                'RemittanceLine1': partner.company_id.name or '',
+                'RemittanceLine1': partner.company_id.name and
+                partner.company_id.name[:35] or '',
                 'HighLowValue': '1',  # default as high value
 
                 'Corporate': self.afex_corporate,
@@ -189,7 +191,15 @@ class ResPartnerBank(models.Model):
 
         # optional data - only provided if entered
         for line in self.add_afex_info_ids:
-            data[line.field] = line.value
+            value = line.value or ''
+            if line.field in \
+                    ('RemittanceLine1',
+                     'RemittanceLine2',
+                     'RemittanceLine3',
+                     'RemittanceLine4',
+                     ):
+                value = value[:35]
+            data[line.field] = value
         return data
 
 
@@ -215,6 +225,27 @@ class AFEXAddFields(models.Model):
     def unlink(self):
         self.mapped('bank_id').write({})
         return super(AFEXAddFields, self).unlink()
+
+    @api.onchange('field', 'value')
+    def validate_value(self):
+        warnings = []
+        if self.field in \
+                ('RemittanceLine1',
+                 'RemittanceLine2',
+                 'RemittanceLine3',
+                 'RemittanceLine4',
+                 ):
+            if self.value and len(self.value) > 35:
+                warnings.append(
+                    _('Value for "%s" is over 35 chars long and will be'
+                      ' truncated.') % (AFEX_ADD_SYNC_LOOKUP[self.field]),)
+        result = {}
+        if warnings:
+            result['warning'] = {
+                'title': _('WARNING'),
+                'message': '\n'.join(warnings),
+                }
+        return result
 
 
 class ResPartner(models.Model):
