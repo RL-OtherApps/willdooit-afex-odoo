@@ -2,19 +2,45 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 
 
+AFEX_ADD_SYNC_DEFINITION = {
+    'RemittanceLine1': {
+        'name': 'Remittance Line 1',
+        'length': 35,
+        },
+    'RemittanceLine2': {
+        'name': 'Remittance Line 2',
+        'length': 35,
+        },
+    'RemittanceLine3': {
+        'name': 'Remittance Line 3',
+        'length': 35,
+        },
+    'RemittanceLine4': {
+        'name': 'Remittance Line 4',
+        'length': 35,
+        },
+    'BankSWIFTBIC': {
+        'name': 'Bank SWIFT BIC',
+        },
+    'BankRoutingcode': {
+        'name': 'Bank Routing Code',
+        },
+    'IntermediaryBankSWIFTBIC': {
+        'name': 'Intermediary Bank SWIFT BIC',
+        },
+    'IntermediaryBankName': {
+        'name': 'Intermediary Bank Name',
+        },
+    'IntermediaryBankRoutingCode': {
+        'name': 'Intermediary Bank Routing Code',
+        },
+    'IntermediaryBankAccountNumber': {
+        'name': 'Intermediary Bank Account Number',
+        },
+    }
 AFEX_ADD_SYNC_FIELDS = [
-    ('RemittanceLine1', 'Remittance Line 1'),
-    ('RemittanceLine2', 'Remittance Line 2 (PoP)'),
-    ('RemittanceLine3', 'Remittance Line 3'),
-    ('RemittanceLine4', 'Remittance Line 4'),
-    ('BankSWIFTBIC', 'Bank SWIFT BIC'),
-    ('BankRoutingcode', 'Bank Routing Code'),
-    ('IntermediaryBankSWIFTBIC', 'Intermediary Bank SWIFT BIC'),
-    ('IntermediaryBankName', 'Intermediary Bank Name'),
-    ('IntermediaryBankRoutingCode', 'Intermediary Bank Routing Code'),
-    ('IntermediaryBankAccountNumber', 'Intermediary Bank Account Number'),
+    (k, v['name']) for k, v in AFEX_ADD_SYNC_DEFINITION.items()
     ]
-AFEX_ADD_SYNC_LOOKUP = dict(AFEX_ADD_SYNC_FIELDS)
 
 
 # This message is included when an error occurs, and is intended to help users
@@ -178,8 +204,7 @@ class ResPartnerBank(models.Model):
                 'BeneficiaryRegion': partner.state_id.code or '',
                 'BankName': self.bank_id.name or '',
                 'BankAccountNumber': self.acc_number or '',
-                'RemittanceLine1': partner.company_id.name and
-                partner.company_id.name[:35] or '',
+                'RemittanceLine1': partner.company_id.name or '',
                 'HighLowValue': '1',  # default as high value
 
                 'Corporate': self.afex_corporate,
@@ -191,15 +216,10 @@ class ResPartnerBank(models.Model):
 
         # optional data - only provided if entered
         for line in self.add_afex_info_ids:
-            value = line.value or ''
-            if line.field in \
-                    ('RemittanceLine1',
-                     'RemittanceLine2',
-                     'RemittanceLine3',
-                     'RemittanceLine4',
-                     ):
-                value = value[:35]
-            data[line.field] = value
+            error, value = line.validate_value(self)
+            if value:
+                data[line.field] = value
+
         return data
 
 
@@ -209,6 +229,14 @@ class AFEXAddFields(models.Model):
     bank_id = fields.Many2one('res.partner.bank', required=True)
     field = fields.Selection(AFEX_ADD_SYNC_FIELDS, required=True)
     value = fields.Char(required=True)
+
+    @api.multi
+    @api.constrains('field', 'value')
+    def _constrain_values(self):
+        for addl in self:
+            error, value = addl.validate_value(self)
+            if error:
+                raise UserError(error)
 
     @api.model
     def create(self, vals):
@@ -226,19 +254,24 @@ class AFEXAddFields(models.Model):
         self.mapped('bank_id').write({})
         return super(AFEXAddFields, self).unlink()
 
-    @api.onchange('field', 'value')
     def validate_value(self):
+        definition = AFEX_ADD_SYNC_DEFINITION.get(self.field, {})
+        max_length = definition.get('length')
+        if self.value and max_length and len(self.value) > max_length:
+            return (
+                _('Value for "%s" is over %s chars long.')
+                % (definition['name'], max_length)),\
+                self.value[:max_length]
+        return False, self.value or ''
+
+    @api.onchange('field', 'value')
+    def onchange_value(self):
         warnings = []
-        if self.field in \
-                ('RemittanceLine1',
-                 'RemittanceLine2',
-                 'RemittanceLine3',
-                 'RemittanceLine4',
-                 ):
-            if self.value and len(self.value) > 35:
-                warnings.append(
-                    _('Value for "%s" is over 35 chars long and will be'
-                      ' truncated.') % (AFEX_ADD_SYNC_LOOKUP[self.field]),)
+        error, value = self.validate_value()
+        if error:
+            warnings.append(error)
+            self.value = value
+
         result = {}
         if warnings:
             result['warning'] = {
