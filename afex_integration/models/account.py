@@ -86,6 +86,38 @@ class AccountJournal(models.Model):
         string="AFEX Fees Expense Account",
         domain=[('deprecated', '=', False)],
         copy=False)
+    afex_direct_debit_journal_id = fields.Many2one(
+        'account.journal',
+        string="Direct Debit Journal",
+        copy=False)
+    afex_direct_debit = fields.Boolean(
+        string='Direct Debit by Default',
+        default=False,
+        copy=False)
+
+    aud_currency_id = fields.Many2one(
+        'res.currency',
+        compute='_compute_aud_currency_id')
+
+    @api.multi
+    def _compute_aud_currency_id(self):
+        aud_currency = self.env.ref('base.AUD')
+        for journal in self:
+            if journal.currency_id == aud_currency:
+                journal.aud_currency_id = aud_currency.id
+            elif not journal.currency_id and journal.company_id.currency_id == aud_currency:
+                journal.aud_currency_id = aud_currency.id
+            else:
+                journal.aud_currency_id = False
+
+    @api.multi
+    @api.constrains('afex_direct_debit_journal_id')
+    def _check_direct_debit_journal(self):
+        for journal in self:
+            if (journal.afex_direct_debit_journal_id
+                    and not journal.afex_direct_debit_journal_id.bank_account_id):
+                raise UserError(
+                    _('Direct Debit Journal has no bank account'))
 
     @api.model
     def create(self, vals):
@@ -137,10 +169,24 @@ class AccountAbstractPayment(models.AbstractModel):
     passed_currency_id = fields.Many2one(
         'res.currency')
 
+    afex_direct_debit = fields.Boolean(
+        string='Direct Debit', default=False, copy=False)
+    afex_direct_debit_journal_id = fields.Many2one(
+        related='journal_id.afex_direct_debit_journal_id',
+        readonly=True)
+    aud_currency_id = fields.Many2one(
+        related='journal_id.aud_currency_id',
+        readonly=True)
+
     @api.onchange('journal_id')
     def _onchange_journal_extra(self):
         if self.journal_id and self.is_afex and self.passed_currency_id:
             self.currency_id = self.passed_currency_id
+        if (self.journal_id and self.is_afex and self.aud_currency_id
+                and self.afex_direct_debit_journal_id):
+            self.afex_direct_debit = self.journal_id.afex_direct_debit
+        else:
+            self.afex_direct_debit = False
 
     @api.onchange('amount', 'currency_id', 'journal_id')
     def _onchange_afex(self):
@@ -233,8 +279,11 @@ class AccountAbstractPayment(models.AbstractModel):
             url = "fees"
             afex_bank = payment.partner_id.afex_bank_for_currency(
                 payment.currency_id)
+            account_number = (payment.afex_direct_debit
+                              and payment.afex_direct_debit_journal_id.bank_account_id.acc_number
+                              or '')
             data = {"Amount": payment.amount,
-                    "AccountNumber": "",
+                    "AccountNumber": account_number,
                     "SettlementCcy": stl_currency.name,
                     "TradeCcy": payment.currency_id.name,
                     "VendorId": afex_bank.afex_unique_id,
@@ -505,6 +554,18 @@ class AccountPayment(models.Model):
                      )],
                 'afex_stl_invoice_id': inv_head.id,
                 })
+
+            if (payment.afex_direct_debit
+                    and payment.afex_stl_invoice_id.currency_id == payment.aud_currency_id):
+                if payment.afex_stl_invoice_id.state == 'draft':
+                    payment.afex_stl_invoice_id.action_invoice_open()
+                payment_methods = payment.afex_direct_debit_journal_id.outbound_payment_method_ids
+                self.env['account.payment'].with_context(
+                    active_ids=payment.afex_stl_invoice_id.ids,
+                    default_invoice_ids=[(4, payment.afex_stl_invoice_id.id)],
+                    default_journal_id=payment.afex_direct_debit_journal_id,
+                    default_payment_method_id = payment_methods and payment_methods[0].id,
+                    ).create({}).post()
 
     def afex_ssi(self):
         for payment in self:

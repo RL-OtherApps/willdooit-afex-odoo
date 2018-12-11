@@ -2,7 +2,7 @@
 
 {
     "name": "AFEX Global Vendor Payments for Businesses",
-    "version": "10.0.1.6",
+    "version": "10.0.1.9",
     "summary": "Make payments to vendors in a foreign currency using AFEX, "
                "by WilldooIT",
     "description": """
@@ -169,6 +169,7 @@ Usage
     "contributors": [
         'Matthew Palmieri',
         'Richard deMeester',
+        'Michael Villamar',
     ],
     'website': 'https://www.willdooit.com',
     "license": "AGPL-3",
