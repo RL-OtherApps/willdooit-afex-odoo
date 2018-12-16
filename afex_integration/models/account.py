@@ -267,10 +267,9 @@ class AccountAbstractPayment(models.AbstractModel):
 
             afex_quote_id = response_json.get('QuoteId')
             afex_terms = response_json.get('Terms')
-            afex_rate =\
-                afex_terms == 'A' and\
-                response_json.get('InvertedRate') or\
-                response_json.get('Rate')
+            afex_rate = response_json.get('Rate')
+            if afex_terms == 'A' and afex_rate:
+                afex_rate = 1.0 / afex_rate
 
             if not afex_quote_id or not afex_rate:
                 raise UserError(_('Could not retrieve a valid AFEX quote'))
