@@ -218,7 +218,7 @@ class ResPartnerBank(models.Model):
 
         # optional data - only provided if entered
         for line in self.add_afex_info_ids:
-            error, value = line.validate_value(self)
+            error, value = line.validate_value()
             if value:
                 data[line.field] = value
 
@@ -236,7 +236,7 @@ class AFEXAddFields(models.Model):
     @api.constrains('field', 'value')
     def _constrain_values(self):
         for addl in self:
-            error, value = addl.validate_value(self)
+            error, value = addl.validate_value()
             if error:
                 raise UserError(error)
 
