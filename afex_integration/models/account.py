@@ -95,20 +95,21 @@ class AccountJournal(models.Model):
         default=False,
         copy=False)
 
-    aud_currency_id = fields.Many2one(
-        'res.currency',
-        compute='_compute_aud_currency_id')
+    can_direct_debit = fields.Boolean(
+        string='Can direct debit?',
+        compute='_compute_can_direct_debit')
 
     @api.multi
-    def _compute_aud_currency_id(self):
+    @api.depends('currency_id')
+    def _compute_can_direct_debit(self):
         aud_currency = self.env.ref('base.AUD')
         for journal in self:
             if journal.currency_id == aud_currency:
-                journal.aud_currency_id = aud_currency.id
+                journal.can_direct_debit = True
             elif not journal.currency_id and journal.company_id.currency_id == aud_currency:
-                journal.aud_currency_id = aud_currency.id
+                journal.can_direct_debit = True
             else:
-                journal.aud_currency_id = False
+                journal.can_direct_debit = False
 
     @api.multi
     @api.constrains('afex_direct_debit_journal_id')
@@ -174,19 +175,12 @@ class AccountAbstractPayment(models.AbstractModel):
     afex_direct_debit_journal_id = fields.Many2one(
         related='journal_id.afex_direct_debit_journal_id',
         readonly=True)
-    aud_currency_id = fields.Many2one(
-        related='journal_id.aud_currency_id',
-        readonly=True)
 
     @api.onchange('journal_id')
     def _onchange_journal_extra(self):
         if self.journal_id and self.is_afex and self.passed_currency_id:
             self.currency_id = self.passed_currency_id
-        if (self.journal_id and self.is_afex and self.aud_currency_id
-                and self.afex_direct_debit_journal_id):
-            self.afex_direct_debit = self.journal_id.afex_direct_debit
-        else:
-            self.afex_direct_debit = False
+        self.afex_direct_debit = self.journal_id.afex_direct_debit
 
     @api.onchange('amount', 'currency_id', 'journal_id')
     def _onchange_afex(self):
@@ -278,9 +272,9 @@ class AccountAbstractPayment(models.AbstractModel):
             url = "fees"
             afex_bank = payment.partner_id.afex_bank_for_currency(
                 payment.currency_id)
-            account_number = (payment.afex_direct_debit
-                              and payment.afex_direct_debit_journal_id.bank_account_id.acc_number
-                              or '')
+            account_number = payment.afex_direct_debit and \
+                payment.afex_direct_debit_journal_id.bank_account_id.acc_number or \
+                ''
             data = {"Amount": payment.amount,
                     "AccountNumber": account_number,
                     "SettlementCcy": stl_currency.name,
@@ -554,8 +548,10 @@ class AccountPayment(models.Model):
                 'afex_stl_invoice_id': inv_head.id,
                 })
 
+            dd_journal_currency = payment.afex_direct_debit_journal_id.currency_id or \
+                payment.afex_direct_debit_journal_id.company_id.currency_id
             if (payment.afex_direct_debit
-                    and payment.afex_stl_invoice_id.currency_id == payment.aud_currency_id):
+                    and payment.afex_stl_invoice_id.currency_id == dd_journal_currency):
                 if payment.afex_stl_invoice_id.state == 'draft':
                     payment.afex_stl_invoice_id.action_invoice_open()
                 payment_methods = payment.afex_direct_debit_journal_id.outbound_payment_method_ids
