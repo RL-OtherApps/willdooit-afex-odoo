@@ -54,6 +54,7 @@
                     <field name="afex_fee_currency_id" readonly='1' options="{'no_create': True, 'no_open': True}" groups="base.group_multi_currency"/>
                 </tree>
             </field>
+            <field name='amt_before_onchange' invisible='1'/>
             <field name="afex_quote_id" invisible="1"/>
             <field name="afex_rate_display" readonly="1" attrs="{'invisible':[('is_afex','=',False)]}"/>
         </div>
@@ -100,6 +101,7 @@
                     <field name="afex_fee_currency_id" readonly='1' options="{'no_create': True, 'no_open': True}" groups="base.group_multi_currency"/>
                 </tree>
             </field>
+            <field name='amt_before_onchange' invisible='1'/>
             <field name="afex_quote_id" invisible="1"/>
             <field name="afex_rate_display" readonly="1" attrs="{'invisible':[('is_afex','=',False)]}"/>
         </field>
@@ -153,6 +155,7 @@
                     <field name="afex_fee_currency_id" readonly='1' options="{'no_create': True, 'no_open': True}" groups="base.group_multi_currency"/>
                 </tree>
             </field>
+            <field name='amt_before_onchange' invisible='1'/>
             <field name="afex_quote_id" invisible="1"/>
             <field name="afex_rate_display" readonly="1" attrs="{'invisible':['|',('is_afex','=',False),('state', '!=', 'draft')]}"/>
         </div>
