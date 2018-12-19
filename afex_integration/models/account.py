@@ -176,17 +176,32 @@ class AccountAbstractPayment(models.AbstractModel):
         related='journal_id.afex_direct_debit_journal_id',
         readonly=True)
 
+    # see comment in onchange
+    amt_before_onchange = fields.Monetary()
+
     @api.onchange('journal_id')
     def _onchange_journal_extra(self):
         if self.journal_id and self.is_afex and self.passed_currency_id:
             self.currency_id = self.passed_currency_id
         self.afex_direct_debit = self.journal_id.afex_direct_debit
 
-    @api.onchange('amount', 'currency_id', 'journal_id')
+    @api.onchange('currency_id', 'journal_id')
     def _onchange_afex(self):
         self.afex_quote_id = False
         self.afex_stl_amount = 0
         self.afex_fee_amount_ids = False
+
+    @api.onchange('amount')
+    def _onchange_afex_amt(self):
+        # This is awful, but due to the client calling onchange every time for
+        # certain amounts (e.g. 976.8000000000001 is sent on every field change
+        # if the amount is 976.80) we can't rely on the amount having changed
+        if self.currency_id and\
+                self.currency_id.round(self.amount) ==\
+                self.currency_id.round(self.amt_before_onchange):
+            return
+        self.amt_before_onchange = self.amount
+        return self._onchange_afex()
 
     @api.depends('afex_fee_amount_ids')
     @api.multi
