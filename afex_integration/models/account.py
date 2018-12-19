@@ -486,7 +486,11 @@ class AccountPayment(models.Model):
             url = "trades/create"
             afex_bank = payment.partner_id.afex_bank_for_currency(
                 payment.currency_id)
+            account_number = payment.afex_direct_debit and \
+                payment.afex_direct_debit_journal_id.bank_account_id.acc_number or \
+                ''
             data = {"Amount": payment.amount,
+                    "AccountNumber": account_number,
                     "TradeCcy": payment.currency_id.name,
                     "SettlementCcy": payment.afex_stl_currency_id.name,
                     "QuoteId": payment.afex_quote_id,
