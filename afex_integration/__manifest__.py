@@ -2,7 +2,7 @@
 
 {
     "name": "AFEX Global Vendor Payments for Businesses",
-    "version": "10.0.2.0",
+    "version": "10.0.2.1",
     "summary": "Make payments to vendors in a foreign currency using AFEX, "
                "by WilldooIT",
     "description": """
@@ -58,6 +58,15 @@ Setup
           will be posted when making an AFEX trade.
 
       - **AFEX Fees Account** - Select an account for expensing AFEX fees.
+
+      - **Direct Debit Journal** - If this journal settles in Australian
+          Dollars, then settlement can be by direct debit. Choose the Odoo
+          Journal used for direct debit payments if you wish this to use this
+          option. The account number for direct debit payments will be picked
+          up from this journal.
+
+      - **Direct Debit by Default** - Enable this if you want direct debit to
+          be the default settlement option.
 
     * **Advanced Settings**
 
