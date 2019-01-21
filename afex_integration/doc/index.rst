@@ -24,7 +24,6 @@ Setup
 
       - **AFEX API Key** - Supplied by AFEX and entered here.
 
-
 - *Accounting > Configuration > Journals*
 
     A new Cash Journal can be created which will be used for AFEX payments. A
@@ -54,6 +53,15 @@ Setup
           will be posted when making an AFEX trade.
 
       - **AFEX Fees Account** - Select an account for expensing AFEX fees.
+
+      - **Direct Debit Journal** - If this journal settles in Australian
+          Dollars, then settlement can be by direct debit. Choose the Odoo
+          Journal used for direct debit payments if you wish this to use this
+          option. The account number for direct debit payments will be picked
+          up from this journal.
+
+      - **Direct Debit by Default** - Enable this if you want direct debit to
+          be the default settlement option.
 
     * **Advanced Settings**
 
