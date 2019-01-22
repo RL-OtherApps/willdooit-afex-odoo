@@ -135,7 +135,7 @@ class AccountAbstractPayment(models.AbstractModel):
         self.afex_direct_debit = self.journal_id.afex_direct_debit
         self.afex_value_date_type = self.journal_id.company_id.afex_value_date_type
 
-    @api.onchange('currency_id', 'journal_id')
+    @api.onchange('amount', 'currency_id', 'journal_id')
     def _onchange_afex(self):
         self.afex_quote_id = False
         self.afex_stl_amount = 0
