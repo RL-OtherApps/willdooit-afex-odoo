@@ -1,5 +1,9 @@
-from odoo import models, fields, api, _
+from datetime import datetime, timedelta
+
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+
+from odoo.addons.afex_integration.models.res_company import VALUE_DATE_TYPES
 
 
 RATE_DISPLAY_MESSAGE = '''
@@ -69,76 +73,7 @@ For further details, refer to AFEX's
 </p>
 '''
 
-
-class AccountJournal(models.Model):
-    _inherit = "account.journal"
-
-    afex_journal = fields.Boolean(
-        string='AFEX Journal', default=False, copy=False)
-    afex_partner_id = fields.Many2one(
-        'res.partner',
-        string="AFEX Invoicing Partner",
-        copy=False)
-    afex_fee_account_id = fields.Many2one(
-        'account.account',
-        string="AFEX Fees Expense Account",
-        domain=[('deprecated', '=', False)],
-        copy=False)
-    afex_direct_debit_journal_id = fields.Many2one(
-        'account.journal',
-        string="Direct Debit Journal",
-        copy=False)
-    afex_direct_debit = fields.Boolean(
-        string='Direct Debit by Default',
-        default=False,
-        copy=False)
-
-    can_direct_debit = fields.Boolean(
-        string='Can direct debit?',
-        compute='_compute_can_direct_debit')
-
-    @api.multi
-    @api.depends('currency_id')
-    def _compute_can_direct_debit(self):
-        aud_currency = self.env.ref('base.AUD')
-        for journal in self:
-            if journal.currency_id == aud_currency:
-                journal.can_direct_debit = True
-            elif not journal.currency_id and journal.company_id.currency_id == aud_currency:
-                journal.can_direct_debit = True
-            else:
-                journal.can_direct_debit = False
-
-    @api.multi
-    @api.constrains('afex_direct_debit_journal_id')
-    def _check_direct_debit_journal(self):
-        for journal in self:
-            if (journal.afex_direct_debit_journal_id
-                    and not journal.afex_direct_debit_journal_id.bank_account_id):
-                raise UserError(
-                    _('Direct Debit Journal has no bank account'))
-
-    @api.model
-    def create(self, vals):
-        res = super(AccountJournal, self).create(vals)
-        res.afex()
-        return res
-
-    @api.multi
-    def write(self, vals):
-        res = super(AccountJournal, self).write(vals)
-        self.afex()
-        return res
-
-    @api.multi
-    def afex(self):
-        for journal in self.filtered(lambda j: j.afex_journal):
-            if journal.type != 'cash':
-                raise UserError(_('AFEX Journals must be of type - Cash'))
-            if journal.inbound_payment_method_ids:
-                raise UserError(
-                    _('AFEX Journals must not have any associated Inbound'
-                      ' Payment Methods (Debit Methods)'))
+AFEX_DATE_FORMAT = '%Y/%m/%d'
 
 
 class AccountAbstractPayment(models.AbstractModel):
@@ -152,7 +87,12 @@ class AccountAbstractPayment(models.AbstractModel):
     afex_rate_display = fields.Html(
         string="AFEX Rate", compute='_afex_rate_display')
     afex_terms_display = fields.Html(
-       compute='_afex_terms_display')
+        compute='_afex_terms_display')
+    afex_allow_earliest_value_date = fields.Boolean(
+        related='journal_id.company_id.afex_allow_earliest_value_date')
+    afex_value_date_type = fields.Selection(
+        selection=VALUE_DATE_TYPES, string="Value Date Type",
+        default='SPOT', copy=False)
 
     afex_stl_currency_id = fields.Many2one('res.currency')
     afex_stl_amount = fields.Monetary(
@@ -174,14 +114,26 @@ class AccountAbstractPayment(models.AbstractModel):
         related='journal_id.afex_direct_debit_journal_id',
         readonly=True)
 
-    # see comment in onchange
-    amt_before_onchange = fields.Monetary()
+    # AFEX Scheduled Payment
+    afex_scheduled_payment = fields.Boolean(
+        related='journal_id.afex_scheduled_payment', readonly=True)
+    afex_funding_balance = fields.Monetary(
+        string='Balance', readonly=True, currency_field='afex_stl_currency_id',
+        help="Total Un-cleared Fund that made up until today's value date")
+    afex_funding_balance_available = fields.Monetary(
+        string='Available Balance', readonly=True,
+        currency_field='afex_stl_currency_id',
+        help="Total Available Cleared Funds up to today's value date")
+    afex_funding_balance_retrieved = fields.Boolean(
+        string='Is funding balance retrieved?')
+    afex_reference_no = fields.Char(string="AFEX Reference Nr.", copy=False)
 
     @api.onchange('journal_id')
     def _onchange_journal_extra(self):
         if self.journal_id and self.is_afex and self.passed_currency_id:
             self.currency_id = self.passed_currency_id
         self.afex_direct_debit = self.journal_id.afex_direct_debit
+        self.afex_value_date_type = self.journal_id.company_id.afex_value_date_type
 
     @api.onchange('currency_id', 'journal_id')
     def _onchange_afex(self):
@@ -189,17 +141,39 @@ class AccountAbstractPayment(models.AbstractModel):
         self.afex_stl_amount = 0
         self.afex_fee_amount_ids = False
 
-    @api.onchange('amount')
-    def _onchange_afex_amt(self):
-        # This is awful, but due to the client calling onchange every time for
-        # certain amounts (e.g. 976.8000000000001 is sent on every field change
-        # if the amount is 976.80) we can't rely on the amount having changed
-        if self.currency_id and\
-                self.currency_id.round(self.amount) ==\
-                self.currency_id.round(self.amt_before_onchange):
-            return
-        self.amt_before_onchange = self.amount
-        return self._onchange_afex()
+    @api.onchange('afex_scheduled_payment')
+    def _onchange_afex_scheduled_payment(self):
+        self.afex_funding_balance_retrieved = False
+
+    @api.onchange('afex_scheduled_payment', 'invoice_ids', 'is_afex', 'afex_value_date_type')
+    def _onchange_afex_scheduled_payment_date(self):
+        today = fields.Date.context_today(self)
+        payment_date = today
+        if self.is_afex:
+            if self.afex_scheduled_payment and self.invoice_ids:
+                due_dates = self.invoice_ids.mapped('date_due')
+                payment_date = due_dates and min(due_dates) or False
+            elif not self.afex_scheduled_payment:
+                stl_currency = self.journal_id.currency_id or \
+                    self.journal_id.company_id.currency_id
+                currencypair = "%s%s" % (
+                    self.currency_id.name, stl_currency.name)
+
+                url = "valuedates?currencypair=%s&valuetype=%s" \
+                    % (currencypair, self.afex_value_date_type)
+                response_json = self.env['afex.connector'].afex_response(
+                        url, payment=self)
+                if response_json.get('ERROR', True):
+                    raise UserError(
+                        _('Error with value date: %s') %
+                        (response_json.get('message', ''),))
+                value_date = response_json.get('items')
+                if value_date:
+                    payment_date = datetime.strptime(
+                        value_date, AFEX_DATE_FORMAT)
+                    payment_date = fields.Date.to_string(
+                        payment_date)
+        self.payment_date = payment_date
 
     @api.depends('afex_fee_amount_ids')
     @api.multi
@@ -234,39 +208,52 @@ class AccountAbstractPayment(models.AbstractModel):
 
     @api.multi
     def refresh_quote(self):
-        for payment in self:
-            payment.afex_check()
-            payment.request_afex_quote()
-
-        return {
-                "type": "ir.actions.do_nothing",
-        }
+        self.ensure_one()
+        self.afex_check()
+        self.request_afex_quote()
+        self.retrieve_afex_balance()
+        if not self.env.context.get('not_wizard'):
+            return {
+                'type': 'ir.actions.act_window',
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': 'account.payment',
+                'res_id': self.id,
+                'view_id': self.env.ref('account.view_account_payment_invoice_form').id,
+                'target': 'new',
+                'context': self.env.context,
+            }
 
     @api.multi
     def request_afex_quote(self):
-        payment = self
-        payment.ensure_one()
+        self.ensure_one()
+        payment = self.filtered(lambda p: not p.afex_scheduled_payment)
 
         Connector = self.env['afex.connector']
         if payment.is_afex:
-            if not payment.partner_id:
+            if payment.multi:
                 raise UserError(
-                    _('AFEX payment can only be made if a single vendor is '
-                      'being paid'))
+                    _('AFEX payment can only be made if a single vendor or '
+                      'vendor bank account is being paid'))
+            if (payment.afex_direct_debit
+                    and not payment.afex_direct_debit_journal_id.bank_account_id.acc_number):
+                raise UserError(
+                    _('Direct Debit Journal has no bank account'))
 
             stl_currency = payment.journal_id.currency_id or \
-                payment.company_id.currency_id
+                payment.journal_id.company_id.currency_id
             currencypair = "%s%s" % (
                 payment.currency_id.name, stl_currency.name)
 
-            url = "valuedates?currencypair=%s" % (currencypair)
+            url = "valuedates?currencypair=%s&valuetype=%s" \
+                % (currencypair, self.afex_value_date_type)
             response_json = Connector.afex_response(
                     url, payment=payment)
             if response_json.get('ERROR', True):
                 raise UserError(
                     _('Error with value date: %s') %
                     (response_json.get('message', ''),))
-            valuedate = response_json.get('items', fields.Date.today())
+            valuedate = response_json.get('items', fields.Date.context_today(self))
 
             url = "quote?currencypair=%s&valuedate=%s" \
                 % (currencypair, valuedate)
@@ -319,22 +306,99 @@ class AccountAbstractPayment(models.AbstractModel):
                     'afex_fee_currency_id': afex_fee_currency.id,
                     }))
 
-            payment.write(
-                {'afex_quote_id': afex_quote_id,
-                 'afex_rate': afex_rate,
-                 'afex_stl_currency_id': stl_currency.id,
-                 'afex_stl_amount': payment_amount,
-                 'afex_fee_amount_ids': afex_fee_amount_ids,
-                 }
-                )
+            payment.write({'afex_quote_id': afex_quote_id,
+                           'afex_rate': afex_rate,
+                           'afex_stl_currency_id': stl_currency.id,
+                           'afex_stl_amount': payment_amount,
+                           'afex_fee_amount_ids': afex_fee_amount_ids,
+                           'payment_date': valuedate,
+                           })
+
+    @api.multi
+    def retrieve_afex_balance(self):
+        self.ensure_one()
+        payment = self.filtered(lambda p: p.afex_scheduled_payment)
+
+        Connector = self.env['afex.connector']
+        if payment.is_afex:
+            if payment.multi:
+                raise UserError(
+                    _('AFEX payment can only be made if a single vendor or '
+                      'vendor bank account is being paid'))
+
+            payment_date = fields.Date.from_string(payment.payment_date)
+            if payment_date.weekday() >= 5:
+                raise UserError(
+                    _('The payment date is not a valid business day.')
+                    )
+
+            stl_currency = payment.journal_id.currency_id or \
+                payment.journal_id.company_id.currency_id
+
+            if stl_currency != payment.currency_id:
+                raise UserError(
+                    _('Wrong payment currency selected'))
+
+            url = "fees"
+            afex_bank = payment.partner_id.afex_bank_for_currency(
+                payment.currency_id)
+            data = {"Amount": payment.amount,
+                    "SettlementCcy": stl_currency.name,
+                    "TradeCcy": payment.currency_id.name,
+                    "VendorId": afex_bank.afex_unique_id,
+                    "ValueDate": payment_date.strftime(AFEX_DATE_FORMAT),
+                    }
+            response_json = Connector.afex_response(
+                url, data=data, payment=payment, post=True)
+            if response_json.get('ERROR', True):
+                raise UserError(
+                    _('Error while retrieving AFEX Fees: %s') %
+                    (response_json.get('message', ''),))
+
+            afex_fee_amount_ids = [(5, 0, 0)]
+            for fee_details in response_json.get('items', []):
+                fee_amount = fee_details.get('Amount')
+                afex_fee_currency = \
+                    self.env['res.currency'].search(
+                        [('name', '=', fee_details.get('Currency', ''))],
+                        limit=1)
+                afex_fee_amount_ids.append((0, 0, {
+                    'afex_fee_amount': fee_amount,
+                    'afex_fee_currency_id': afex_fee_currency.id,
+                    }))
+
+            afex_funding_balance = 0.0
+            afex_funding_balance_available = 0.0
+            url = "funding"
+            response_json = Connector.afex_response(
+                url)
+            if response_json.get('ERROR', True):
+                raise UserError(
+                    _('Error while retrieving AFEX Funding Balance: %s') %
+                    (response_json.get('message', ''),))
+            for funding_details in response_json.get('items', []):
+                if stl_currency.name == funding_details.get('Currency'):
+                    afex_funding_balance = funding_details.get('Balance')
+                    afex_funding_balance_available = \
+                        funding_details.get('AvailableBalance')
+                    break
+
+            payment.write({'afex_stl_currency_id': stl_currency.id,
+                           'afex_stl_amount': 0.0,
+                           'afex_fee_amount_ids': afex_fee_amount_ids,
+                           'afex_funding_balance': afex_funding_balance,
+                           'afex_funding_balance_available': \
+                                afex_funding_balance_available,
+                           'afex_funding_balance_retrieved': True,
+                           })
 
     @api.multi
     def afex_check(self):
         for payment in self.filtered(lambda p: p.is_afex):
-            if not payment.partner_id:
+            if payment.multi:
                 raise UserError(
-                    _('AFEX payment can only be made if a single vendor is '
-                      'being paid'))
+                    _('AFEX payment can only be made if a single vendor or '
+                      'vendor bank account is being paid'))
 
             afex_bank = payment.partner_id.afex_bank_for_currency(
                 payment.currency_id)
@@ -357,19 +421,29 @@ class AccountRegisterPayments(models.TransientModel):
     @api.model
     def default_get(self, fields):
         rec = super(AccountRegisterPayments, self).default_get(fields)
-        rec.update({
-            'passed_currency_id': rec['currency_id'],
-            })
+        rec.update({'passed_currency_id': rec['currency_id']})
         return rec
+
+    @api.onchange('is_afex')
+    def onchange_is_afex(self):
+        if self.is_afex:
+            self.group_invoices = True
 
     @api.multi
     def refresh_quote(self):
-        for payment in self:
-            payment.afex_check()
-            payment.request_afex_quote()
-
+        self.ensure_one()
+        self.afex_check()
+        self.request_afex_quote()
+        self.retrieve_afex_balance()
         return {
-                "type": "ir.actions.do_nothing",
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'account.register.payments',
+            'res_id': self.id,
+            'view_id': self.env.ref('account.view_account_payment_from_invoices').id,
+            'target': 'new',
+            'context': self.env.context,
         }
 
     def _prepare_payment_vals(self, invoices):
@@ -385,6 +459,11 @@ class AccountRegisterPayments(models.TransientModel):
                     'afex_fee_amount': f.afex_fee_amount,
                     'afex_fee_currency_id': f.afex_fee_currency_id.id,
                     }) for f in self.afex_fee_amount_ids],
+            'afex_direct_debit': self.afex_direct_debit,
+            'afex_funding_balance': self.afex_funding_balance,
+            'afex_funding_balance_available': self.afex_funding_balance_available,
+            'afex_funding_balance_retrieved': self.afex_funding_balance_retrieved,
+            'afex_reference_no': self.afex_reference_no,
             })
         return result
 
@@ -395,9 +474,7 @@ class AccountPayment(models.Model):
     @api.model
     def default_get(self, fields):
         rec = super(AccountPayment, self).default_get(fields)
-        rec.update({
-            'passed_currency_id': rec.get('currency_id', False),
-            })
+        rec.update({'passed_currency_id': rec.get('currency_id', False)})
         return rec
 
     afex_invoice_ids = fields.One2many(
@@ -430,10 +507,12 @@ class AccountPayment(models.Model):
         res = super(AccountPayment, self).post()
         self.afex_check()
         self.create_afex_trade()
+        self.create_afex_scheduled_payment()
         return res
 
     def create_afex_trade(self):
-        for payment in self.filtered(lambda p: p.is_afex):
+        for payment in self.filtered(lambda p: p.is_afex
+                                     and not p.afex_scheduled_payment):
             if not payment.afex_rate or \
                     not payment.afex_quote_id or \
                     payment.afex_quote_id < 1:
@@ -498,6 +577,7 @@ class AccountPayment(models.Model):
             account_number = payment.afex_direct_debit and \
                 payment.afex_direct_debit_journal_id.bank_account_id.acc_number or \
                 ''
+            payment_date = fields.Date.from_string(payment.payment_date)
             data = {"Amount": payment.amount,
                     "AccountNumber": account_number,
                     "TradeCcy": payment.currency_id.name,
@@ -505,6 +585,7 @@ class AccountPayment(models.Model):
                     "QuoteId": payment.afex_quote_id,
                     "VendorId": afex_bank.afex_unique_id,
                     "PurposeOfPayment": payment.communication,
+                    "ValueDate": payment_date.strftime(AFEX_DATE_FORMAT),
                     }
             response_json = self.env['afex.connector'].afex_response(
                 url, data=data, payment=payment, post=True)
@@ -590,6 +671,119 @@ class AccountPayment(models.Model):
                     default_payment_method_id = payment_methods and payment_methods[0].id,
                     ).create({}).post()
 
+    def create_afex_scheduled_payment(self):
+        for payment in self.filtered(lambda p: p.is_afex
+                                     and p.afex_scheduled_payment):
+            if not payment.afex_funding_balance_retrieved:
+                raise UserError(
+                    _('Invalid AFEX Funding Balance Retrieval - Please '
+                      'retrieve balance again before attempting  payment.'))
+            if payment.partner_id.afex_sync_status != 'done':
+                raise UserError(
+                    _('Partner needs to be resynced with AFEX before a trade'
+                      ' can be made.')
+                    )
+
+            payment_date = fields.Date.from_string(payment.payment_date)
+            if payment_date.weekday() >= 5:
+                raise UserError(
+                    _('The payment date is not a valid business day.')
+                    )
+
+            invoices = {}
+            for fee in payment.afex_fee_amount_ids:
+                if fee.afex_fee_currency_id.id in invoices:
+                    inv_fee = invoices[fee.afex_fee_currency_id.id]
+                else:
+                    inv_fee = self.env['account.invoice'].with_context(
+                        type='in_invoice').create(
+                        {'partner_id': payment.journal_id.afex_partner_id.id,
+                         'user_id': self.env.user.id,
+                         'company_id': payment.company_id.id,
+                         'currency_id': fee.afex_fee_currency_id.id,
+                         })
+                    inv_fee._onchange_partner_id()
+                    inv_fee.date_invoice = inv_fee.date_due =\
+                        fields.Date.context_today(self)
+                    invoices[fee.afex_fee_currency_id.id] = inv_fee
+                self.env['account.invoice.line'].create(
+                    {'invoice_id': inv_fee.id,
+                     'account_id': payment.journal_id.afex_fee_account_id.id,
+                     'name': 'AFEX Transaction Fee',
+                     'price_unit': fee.afex_fee_amount,
+                     'quantity': 1,
+                     })
+
+            url = "Payments/Create"
+            afex_bank = payment.partner_id.afex_bank_for_currency(
+                payment.currency_id)
+            data = {"Currency": payment.currency_id.name,
+                    "VendorId": afex_bank.afex_unique_id,
+                    "Amount": payment.amount,
+                    "PaymentDate": payment_date.strftime(AFEX_DATE_FORMAT),
+                    }
+            response_json = self.env['afex.connector'].afex_response(
+                url, data=data, payment=payment, post=True)
+            if response_json.get('ERROR', True):
+                raise UserError(
+                    _('Error while creating AFEX Scheduled Payment: %s') %
+                    (response_json.get('message', ''),))
+            reference_number = response_json.get('ReferenceNumber', False)
+            if reference_number:
+                ssi_account_number = payment.company_id.afex_api_key and \
+                    len(payment.company_id.afex_api_key) > 8 and \
+                    payment.company_id.afex_api_key[0:8] or ''
+                payment.afex_reference_no = reference_number
+                payment.afex_ssi_account_number = ssi_account_number
+
+                ssi_details = []
+                for currency in payment.afex_fee_amount_ids.mapped(
+                        'afex_fee_currency_id'):
+                    url = "ssi/GetSSI?Currency=%s" % (
+                        currency.name,)
+
+                    response_json = self.env['afex.connector'].afex_response(
+                        url)
+                    if not response_json.get('ERROR', True):
+                        instructions = [
+                            x['PaymentInstructions']
+                            for x in response_json.get('items', [])
+                            if x.get('PaymentInstructions')]
+                        if instructions:
+                            ssi_details.append(
+                                '<strong>Instructions for %s Amount:</strong>'
+                                '<br/>%s' %
+                                (currency.name,
+                                    '<br/>'.join(instructions).replace(
+                                        '\r', '<br/>'
+                                        )
+                                 )
+                                )
+
+                payment.afex_ssi_details = \
+                    "%s<p><strong>Please remember to include the AFEX Account"\
+                    " Number <%s> in remittance information.</strong></p>" % \
+                    ('<br/>'.join(ssi_details),
+                     ssi_account_number
+                     )
+
+                for invoice in invoices.values():
+                    invoice.reference = 'Fee[%s] %s %s' % (
+                        invoice.currency_id.name,
+                        ssi_account_number,
+                        reference_number
+                        )
+
+                for invoice in invoices.values():
+                    invoice.action_invoice_open()
+
+            payment.write({
+                'afex_invoice_ids': [
+                    (6, 0,
+                     [i.id for i in invoices.values()]
+                     )],
+                })
+
     def afex_ssi(self):
         for payment in self:
             if not payment.afex_ssi_details:
@@ -601,11 +795,12 @@ class AccountPayment(models.Model):
                      payment.currency_id.name,
                      payment.amount,
                      )
-                payment_amounts = '%s<p>Settlement Amount (%s): %.2f</p>' %\
-                    (payment_amounts,
-                     payment.afex_stl_currency_id.name,
-                     payment.afex_stl_amount,
-                     )
+                if not payment.afex_scheduled_payment:
+                    payment_amounts = '%s<p>Settlement Amount (%s): %.2f</p>' %\
+                        (payment_amounts,
+                         payment.afex_stl_currency_id.name,
+                         payment.afex_stl_amount,
+                         )
                 for fee in payment.afex_fee_amount_ids:
                     payment_amounts = '%s<p>Fee Amount (%s): %.2f</p>' %\
                         (payment_amounts,
@@ -631,20 +826,3 @@ class AccountPaymentAfexFee(models.Model):
         string='AFEX Fee Amount', currency_field='afex_fee_currency_id')
     afex_fee_currency_id = fields.Many2one(
         'res.currency', string='Fee Currency')
-
-
-class AccountInvoice(models.Model):
-    _inherit = "account.invoice"
-
-    afex_payment_id = fields.Many2one(
-        'account.payment',
-        string='AFEX Source',
-        readonly=True)
-    is_afex = fields.Boolean(
-        related=['afex_payment_id',
-                 'is_afex'],
-        readonly=True)
-    afex_ssi_details_display = fields.Html(
-        related=['afex_payment_id',
-                 'afex_ssi_details_display'],
-        string="SSI Details", readonly=True)

@@ -26,11 +26,11 @@ Setup
 
 - *Accounting > Configuration > Journals*
 
-    A new Cash Journal can be created which will be used for AFEX payments. A
-    single journal will suffice if settlement will always be in the local
-    currency. If settlement will be made in other currencies, then a journal
-    will be required per currency. The settlement currency is the currency
-    used to pay AFEX, not the currency used to pay the vendor.
+    A new Cash/Bank Journal can be created which will be used for AFEX
+    payments. A single journal will suffice if settlement will always be in the
+    local currency. If settlement will be made in other currencies, then a
+    journal will be required per currency. The settlement currency is the
+    currency used to pay AFEX, not the currency used to pay the vendor.
 
     * **Journal Entries**
 

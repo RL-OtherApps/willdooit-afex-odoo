@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-<data>
 
-<record model="ir.ui.view" id="view_partner_bank_form">
+<record id="res_partner_bank_afex_view_form" model="ir.ui.view">
     <field name="name">Partner Bank with Afex</field>
     <field name="model">res.partner.bank</field>
     <field name="inherit_id" ref="base.view_partner_bank_form"/>
     <field name="arch" type="xml">
-        <xpath expr='//field[@name="company_id"]/..' position="after">
+        <xpath expr="//field[@name='bank_id']/.." position="after">
             <group>
                 <field name="is_afex"/>
-                <field name="afex_sync_status" attrs="{'invisible':[('is_afex','=',False)]}"/>
-                <field name="afex_corporate" attrs="{'invisible':[('is_afex','=',False)]}"/>
-                <field name="afex_bank_country_id" attrs="{'invisible':[('is_afex','=',False)]}"/>
-                <field name="afex_int_bank_country_id" attrs="{'invisible':[('is_afex','=',False)]}"/>
-                <field name="add_afex_info_ids" attrs="{'invisible':[('is_afex','=',False)]}" context="{'default_bank_id':id}">
+                <field name="afex_sync_status" attrs="{'invisible': [('is_afex', '=', False)]}"/>
+                <field name="afex_corporate" attrs="{'invisible': [('is_afex', '=', False)]}"/>
+                <field name="afex_bank_country_id" attrs="{'invisible': [('is_afex', '=', False)]}"/>
+                <field name="afex_int_bank_country_id" attrs="{'invisible': [('is_afex', '=', False)]}"/>
+                <field name="add_afex_info_ids" attrs="{'invisible': [('is_afex', '=', False)]}" context="{'default_bank_id': id}">
                     <tree editable="bottom">
                         <field name="bank_id" invisible="1"/>
                         <field name="field"/>
@@ -35,18 +34,18 @@
     </field>
 </record>
 
-<record model="ir.ui.view" id="view_partner_form">
+<record id="res_partner_afex_view_form" model="ir.ui.view">
     <field name="name">afex_in_res_partner</field>
     <field name="model">res.partner</field>
     <field name="inherit_id" ref="base.view_partner_form"/>
     <field name="arch" type="xml">
-        <xpath expr='//group[@name="purchase"]/field[@name="supplier"]' position="after">
+        <xpath expr="//group[@name='purchase']/field[@name='supplier']" position="after">
             <field name="afex_sync_status" attrs="{'invisible': ['!', ('afex_sync_status', 'in', ('done', 'needed'))]}"/>
         </xpath>
     </field>
 </record>
 
-<record model="ir.actions.server" id="afex_partner_server_sync">
+<record id="afex_partner_server_sync" model="ir.actions.server">
     <field name="name">AFEX Sync</field>
     <field name="type">ir.actions.server</field>
     <field name="state">code</field>
@@ -57,5 +56,4 @@ records.sync_partners_afex()
     </field>
 </record>
 
-</data>
 </odoo>

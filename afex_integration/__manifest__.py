@@ -1,6 +1,6 @@
 {
     "name": "AFEX Global Vendor Payments for Businesses",
-    "version": "11.0.2.1",
+    "version": "12.0.3.1",
     "summary": "Make payments to vendors in a foreign currency using AFEX, "
                "by WilldooIT",
     "description": """
@@ -27,11 +27,11 @@ Setup
 
 - *Accounting > Configuration > Journals*
 
-    A new Cash Journal can be created which will be used for AFEX payments. A
-    single journal will suffice if settlement will always be in the local
-    currency. If settlement will be made in other currencies, then a journal
-    will be required per currency. The settlement currency is the currency
-    used to pay AFEX, not the currency used to pay the vendor.
+    A new Cash/Bank Journal can be created which will be used for AFEX
+    payments. A single journal will suffice if settlement will always be in the
+    local currency. If settlement will be made in other currencies, then a
+    journal will be required per currency. The settlement currency is the
+    currency used to pay AFEX, not the currency used to pay the vendor.
 
     * **Journal Entries**
 
@@ -168,29 +168,29 @@ Usage
 """,
 
     "depends": [
-        'account',
+        "account",
     ],
-    "author": "WilldooIT",
+    "author": "WilldooIT Pty Ltd",
     "contributors": [
-        'Matthew Palmieri',
-        'Richard deMeester',
-        'Michael Villamar',
+        "Matthew Palmieri",
+        "Richard deMeester",
+        "Michael Villamar",
     ],
-    'website': 'https://www.willdooit.com',
+    "website": "https://www.willdooit.com",
     "license": "AGPL-3",
     "category": "Accounting & Finance",
-
-    'data': [
-        "views/account_view.xml",
-        "views/partner_view.xml",
+    "data": [
+        "views/res_company_views.xml",
+        "views/res_partner_views.xml",
+        "views/account_journal_views.xml",
+        "views/account_payment_views.xml",
+        "views/account_invoice_views.xml",
         "security/ir.model.access.csv",
         "data/ir_config_data.xml",
     ],
-    'images': [
-        'static/description/banner.png',
+    "images": [
+        "static/description/banner.png",
     ],
-    "demo": [],
-    "test": [],
     "installable": True,
     "active": False,
     "application": True,
