@@ -37,9 +37,9 @@
 <record id="res_partner_afex_view_form" model="ir.ui.view">
     <field name="name">afex_in_res_partner</field>
     <field name="model">res.partner</field>
-    <field name="inherit_id" ref="base.view_partner_form"/>
+    <field name="inherit_id" ref="account.view_partner_property_form"/>
     <field name="arch" type="xml">
-        <xpath expr="//group[@name='purchase']/field[@name='supplier']" position="after">
+        <xpath expr="//group[@name='banks']/button" position="after">
             <field name="afex_sync_status" attrs="{'invisible': ['!', ('afex_sync_status', 'in', ('done', 'needed'))]}"/>
         </xpath>
     </field>

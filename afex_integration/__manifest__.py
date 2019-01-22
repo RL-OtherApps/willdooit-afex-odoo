@@ -21,9 +21,20 @@ Setup
 
 - *Settings > Users & Companies > Companies > General Information Tab*
 
-    For each Odoo defined company which will trade with AFEX:
+    These settings must be set for each Odoo defined company which will trade
+    with AFEX.
 
-      - **AFEX API Key** - Supplied by AFEX and entered here.
+    * **AFEX API Key**
+      Supplied by AFEX and entered here.
+
+    * **Allow Earliest Value Date**
+      Leave this disabled if your trade requests should always choose the SPOT
+      rate. If you wish users to be able to choose CASH or TOM rates, then
+      enable this option.
+
+    * **Default Value Date**
+      If users can choose rates other than SPOT, then this will be required to
+      be the default rate.
 
 - *Accounting > Configuration > Journals*
 
@@ -35,62 +46,75 @@ Setup
 
     * **Journal Entries**
 
-      - **Default Debit / Credit Account** - G/L account for AFEX clearing.
-          Should be set up as a non reconcilable liability account which is
-          reviewed periodically. It could also be a revenue or expense account.
-          The balance which accumulates in here will be the difference between
-          the Odoo anticipated settlement from stored currency rates, and the
-          actual settlement value to AFEX. It may be treated as a straight
-          expense, or it may be allocated to other areas of the accounts.
+      - **Default Debit / Credit Account**
+        G/L account for AFEX clearing. Should be set up as a non reconcilable
+        liability account which is reviewed periodically. It could also be a
+        revenue or expense account. The balance which accumulates in here will
+        be the difference between the Odoo anticipated settlement from stored
+        currency rates, and the actual settlement value to AFEX. It may be
+        treated as a straight expense, or it may be allocated to other areas
+        of the accounts.
 
-      - **Currency** - Leave blank for settlement in the company currency,
-          or enter a currency if settling in another in-between currency. The
-          payment will use the currency from here when posting to the clearing
-          account defined above.
+      - **Currency**
+        Leave blank for settlement in the company currency, or enter a currency
+        if settling in another in-between currency. The payment will use the
+        currency from here when posting to the clearing account defined above.
 
-      - **AFEX Journal** - Enabled.
+      - **AFEX Journal**
+        Enabled.
 
-      - **AFEX Invoicing Partner** - This is the partner to which the liability
-          will be posted when making an AFEX trade.
+      - **AFEX Scheduled Payment**
+        If journal type is *Bank*, then this can be enabled to create
+        transactions using pre-purchased funding balances.
 
-      - **AFEX Fees Account** - Select an account for expensing AFEX fees.
+      - **AFEX Invoicing Partner**
+        This is the partner to which the liability will be posted when making
+        an AFEX trade.
 
-      - **Direct Debit Journal** - If this journal settles in Australian
-          Dollars, then settlement can be by direct debit. Choose the Odoo
-          Journal used for direct debit payments if you wish this to use this
-          option. The account number for direct debit payments will be picked
-          up from this journal.
+      - **AFEX Fees Account**
+        Select an account for expensing AFEX fees.
 
-      - **Direct Debit by Default** - Enable this if you want direct debit to
-          be the default settlement option.
+      - **Direct Debit Journal**
+        If this journal settles in Australian Dollars, then settlement can be
+        by direct debit. Choose the Odoo Journal used for direct debit payments
+        if you wish this to use this option. The account number for direct
+        debit payments will be picked up from this journal.
+
+      - **Direct Debit by Default**
+        Enable this if you want direct debit to be the default settlement
+        option.
 
     * **Advanced Settings**
 
-      - **Debit Methods** - None should be selected.
+      - **For Incoming Payments**
+        None should be selected.
 
-      - **Payment Methods** - Enable manual.
+      - **For Outgoing Payments**
+        Enable manual.
 
-- *Partner > Sales and Purchases Tab > Bank Account(s)*
+- *Partner > Accounting Tab > Bank Accounts*
 
     Vendors have an option available against their bank accounts to allow
-    them to be marked as bank accounts to be associated with AFEX.  There
+    them to be marked as bank accounts to be associated with AFEX. There
     should only be one for any currency for a given vendor.
 
     * **AFEX Beneficiary**
 
     * **Currency**
 
-    Other values will depend on the beneficiary.  Generally, attempting to sync
+    Other values will depend on the beneficiary. Generally, attempting to sync
     beneficiaries with incomplete information will tell you of missing required
     data, but it varies due to many factors.
 
-    * **AFEX Corporate** - If the beneficiary is not an individual.
+    * **AFEX Corporate**
+      If the beneficiary is not an individual.
 
     * **AFEX Bank Country**
 
     * **AFEX Intermediary Bank Country**
 
-    * **AFEX Sync Information** - Various values.
+    * **AFEX Sync Information**
+      Various values.
 
     Other required values are picked up from the partner address area.
 
@@ -107,36 +131,49 @@ Setup
     The **AFEX Beneficiary** should be confirmed **by AFEX** before any
     payments are made.
 
-    A general indication of the status is shown  on the *Sales and Purchases*
-    Tab.
+    A general indication of the status is shown  on the *Accounting* Tab.
 
-    * **AFEX Status** - Either *Sync Needed* or *Synchronised*.
+    * **AFEX Status**
+      Either *Sync Needed* or *Synchronised*.
 
 - *Settings > Technical > System Parameters*
 
     The URL defaults to the live URL (https://api.afex.com:7890/api/).  If
     need be, it can be changed in the System Parameters.
 
-    * **Key** - afex.url
+    * **Key**
+      afex.url
 
-    * **Value** - the URL *(e.g. https://demo.api.afex.com:7890/api/)*
+    * **Value**
+      the URL *(e.g. https://demo.api.afex.com:7890/api/)*
 
 
 Usage
 -----
 
-- *Accounting > Purchases > Vendor Bills > [Open Bill] > Register Payment* or
-    *Accounting > Purchases > Vendor Bills > [Select Multiple] > [Action Drop
-    Down and Register Payment]
+- *Accounting > Vendors > Bills > [Open Bill] > Register Payment* or
+    *Accounting > Vendors > Bills > [Select Multiple] > [Action Drop Down
+    and Register Payment]* or *Accounting > Vendors > Payments > [Create]*
 
     To make a foreign currency payment using an **AFEX Journal** for a vendor
-    who has an associated **confirmed AFEX Beneficiary**.  Choose the correct
+    who has an associated **confirmed AFEX Beneficiary**. Choose the correct
     payment journal, which will determine the settlement currency. The payment
     amount and currency can be chosen. If part or overpaying a single bill, an
     option will be given to choose if the balance is to be kept open or if
     it is to be written off.
 
-    Retrieving a quote, the system will retrieve the exchange rate from AFEX
+    If the payment journal can use direct debit payment, then this can be
+    enabled or disabled for the trade in question.
+
+    If the system configuration allows users to select **CASH** or **TOM**
+    rates, as well as **SPOT**, then this can be selected for the trade in
+    question.
+
+    If the payment journal has a funding balance, a button will be displayed
+    to retrieve the current balance for that currency.
+
+    If the payment journal is a trade journal, a button will be displayed to
+    retrieve a quote. The system will retrieve the exchange rate from AFEX
     and display the **payment amount** conversion using the exchange rate.
     Quote information is displayed on the payment screen.
 
@@ -156,12 +193,16 @@ Usage
     settlement currency will be included in the same bill. Otherwise, separate
     bill(s) will be raised for the fee(s).
 
+    If direct debit settlement was selected, then the AFEX bill will be marked
+    as paid.
+
     Information about the booked payment will be displayed on the AFEX bill,
     and on the Odoo payment record.
 
-    To ensure the foreign currency payment can be sent to the vendor on the
-    scheduled date, you must remit settlement funding for the payment to AFEX
-    within 24 hours of booking the payment.
+    If not settled by direct debit, and if not using a funding balance, then
+    you must remit settlement funding for the payment to AFEX within 24 hours of
+    booking the payment to ensure the foreign currency payment can be sent to
+    the vendor on the scheduled date.
 
     Upon AFEX receiving payment, the booked payment to the vendor will be
     confirmed for the scheduled time.
