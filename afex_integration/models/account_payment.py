@@ -74,6 +74,7 @@ For further details, refer to AFEX's
 '''
 
 AFEX_DATE_FORMAT = '%Y/%m/%d'
+AFEX_FUNDING_BALANCE_RETRIEVED_EXPIRY = 120 # In seconds
 
 
 class AccountAbstractPayment(models.AbstractModel):
@@ -91,8 +92,10 @@ class AccountAbstractPayment(models.AbstractModel):
     afex_allow_earliest_value_date = fields.Boolean(
         related='journal_id.company_id.afex_allow_earliest_value_date')
     afex_value_date_type = fields.Selection(
-        selection=VALUE_DATE_TYPES, string="Value Date Type",
-        default='SPOT', copy=False)
+        selection=VALUE_DATE_TYPES, string="Payment Type",
+        default='SPOT', copy=False,
+        help=("Choose between 'Today', 'Next business day' or "
+              "'Two business days' rate for your trade request."))
 
     afex_stl_currency_id = fields.Many2one('res.currency')
     afex_stl_amount = fields.Monetary(
@@ -109,7 +112,8 @@ class AccountAbstractPayment(models.AbstractModel):
         'res.currency')
 
     afex_direct_debit = fields.Boolean(
-        string='Direct Debit', default=False, copy=False)
+        string='Direct Debit', default=False, copy=False,
+        help="Enable this if you want direct debit settlement option.")
     afex_direct_debit_journal_id = fields.Many2one(
         related='journal_id.afex_direct_debit_journal_id',
         readonly=True)
@@ -124,14 +128,13 @@ class AccountAbstractPayment(models.AbstractModel):
         string='Available Balance', readonly=True,
         currency_field='afex_stl_currency_id',
         help="Total Available Cleared Funds up to today's value date")
-    afex_funding_balance_retrieved = fields.Boolean(
-        string='Is funding balance retrieved?')
-    afex_reference_no = fields.Char(string="AFEX Reference Nr.", copy=False)
+    afex_funding_balance_retrieved_date = fields.Datetime(
+        string='Funding Balance Retrieved Date', copy=False)
+    afex_reference_no = fields.Char(string="AFEX Reference Nr.", copy=False,
+        help="Reference number retrieved from scheduled payment")
 
     @api.onchange('journal_id')
     def _onchange_journal_extra(self):
-        if self.journal_id and self.is_afex and self.passed_currency_id:
-            self.currency_id = self.passed_currency_id
         self.afex_direct_debit = self.journal_id.afex_direct_debit
         self.afex_value_date_type = self.journal_id.company_id.afex_value_date_type
 
@@ -140,10 +143,7 @@ class AccountAbstractPayment(models.AbstractModel):
         self.afex_quote_id = False
         self.afex_stl_amount = 0
         self.afex_fee_amount_ids = False
-
-    @api.onchange('afex_scheduled_payment')
-    def _onchange_afex_scheduled_payment(self):
-        self.afex_funding_balance_retrieved = False
+        self.afex_funding_balance_retrieved_date = False
 
     @api.onchange('afex_scheduled_payment', 'invoice_ids', 'is_afex', 'afex_value_date_type')
     def _onchange_afex_scheduled_payment_date(self):
@@ -152,7 +152,7 @@ class AccountAbstractPayment(models.AbstractModel):
         if self.is_afex:
             if self.afex_scheduled_payment and self.invoice_ids:
                 due_dates = self.invoice_ids.mapped('date_due')
-                payment_date = due_dates and min(due_dates) or False
+                payment_date = due_dates and max(min(due_dates), today) or False
             elif not self.afex_scheduled_payment:
                 stl_currency = self.journal_id.currency_id or \
                     self.journal_id.company_id.currency_id
@@ -389,7 +389,8 @@ class AccountAbstractPayment(models.AbstractModel):
                            'afex_funding_balance': afex_funding_balance,
                            'afex_funding_balance_available': \
                                 afex_funding_balance_available,
-                           'afex_funding_balance_retrieved': True,
+                           'afex_funding_balance_retrieved_date': \
+                                fields.Datetime.now(),
                            })
 
     @api.multi
@@ -461,8 +462,10 @@ class AccountRegisterPayments(models.TransientModel):
                     }) for f in self.afex_fee_amount_ids],
             'afex_direct_debit': self.afex_direct_debit,
             'afex_funding_balance': self.afex_funding_balance,
-            'afex_funding_balance_available': self.afex_funding_balance_available,
-            'afex_funding_balance_retrieved': self.afex_funding_balance_retrieved,
+            'afex_funding_balance_available': \
+                self.afex_funding_balance_available,
+            'afex_funding_balance_retrieved_date': \
+                self.afex_funding_balance_retrieved_date,
             'afex_reference_no': self.afex_reference_no,
             })
         return result
@@ -602,9 +605,19 @@ class AccountPayment(models.Model):
                 payment.afex_ssi_account_number = ssi_account_number
 
                 ssi_details = []
-                for currency in payment.afex_stl_currency_id\
+
+                instruction_currencies = payment.afex_stl_currency_id\
                         | payment.afex_fee_amount_ids.mapped(
-                            'afex_fee_currency_id'):
+                            'afex_fee_currency_id')
+                if payment.afex_direct_debit:
+                    instruction_currencies -= payment.afex_stl_currency_id
+                    ssi_details.append(
+                        "<strong>Instructions for %s Amount:</strong>"
+                        "<br/>Settlement for this was by direct debit" %
+                        (payment.afex_stl_currency_id.name)
+                        )
+
+                for currency in instruction_currencies:
                     url = "ssi/GetSSI?Currency=%s" % (
                         currency.name,)
 
@@ -626,12 +639,16 @@ class AccountPayment(models.Model):
                                  )
                                 )
 
-                payment.afex_ssi_details = \
-                    "%s<p><strong>Please remember to include the AFEX Account"\
-                    " Number <%s> in remittance information.</strong></p>" % \
-                    ('<br/>'.join(ssi_details),
-                     ssi_account_number
-                     )
+                afex_ssi_details = "<br/>".join(ssi_details)
+                if instruction_currencies:
+                    afex_ssi_details += (
+                        "<p><strong>Please remember to include the AFEX"
+                        " Account Number <%s> in remittance information."
+                        "</strong></p>" % (ssi_account_number)
+                        )
+                else:
+                    afex_ssi_details += "<p/>"
+                payment.afex_ssi_details = afex_ssi_details
 
                 for invoice in invoices.values():
                     if invoice == inv_head:
@@ -674,14 +691,19 @@ class AccountPayment(models.Model):
     def create_afex_scheduled_payment(self):
         for payment in self.filtered(lambda p: p.is_afex
                                      and p.afex_scheduled_payment):
-            if not payment.afex_funding_balance_retrieved:
+            retrieved_date = payment.afex_funding_balance_retrieved_date
+            retrieved_allow_date = retrieved_date and \
+                fields.Datetime.from_string(retrieved_date) + \
+                timedelta(seconds=AFEX_FUNDING_BALANCE_RETRIEVED_EXPIRY)
+            now = fields.Datetime.from_string(fields.Datetime.now())
+            if not retrieved_allow_date or retrieved_allow_date < now:
                 raise UserError(
                     _('Invalid AFEX Funding Balance Retrieval - Please '
                       'retrieve balance again before attempting  payment.'))
             if payment.partner_id.afex_sync_status != 'done':
                 raise UserError(
-                    _('Partner needs to be resynced with AFEX before a trade'
-                      ' can be made.')
+                    _('Partner needs to be resynced with AFEX before a'
+                      ' funding balance retrieval.')
                     )
 
             payment_date = fields.Date.from_string(payment.payment_date)

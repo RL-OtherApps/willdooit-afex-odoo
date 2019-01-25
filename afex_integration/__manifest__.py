@@ -1,6 +1,6 @@
 {
     "name": "AFEX Global Vendor Payments for Businesses",
-    "version": "12.0.3.1",
+    "version": "12.0.3.3",
     "summary": "Make payments to vendors in a foreign currency using AFEX, "
                "by WilldooIT",
     "description": """
@@ -17,7 +17,7 @@ this module can be used. AFEX's terms and conditions apply.
 AFEX homepage: https://www.afex.com/
 
 Setup
------
+=====
 
 - *Settings > Users & Companies > Companies > General Information Tab*
 
@@ -28,13 +28,13 @@ Setup
       Supplied by AFEX and entered here.
 
     * **Allow Earliest Value Date**
-      Leave this disabled if your trade requests should always choose the SPOT
-      rate. If you wish users to be able to choose CASH or TOM rates, then
-      enable this option.
+      Leave this disabled if your trade requests should always choose the
+      *Two business days* rate. If you wish users to be able to choose
+      *Today* or *Next business day* rates, then enable this option.
 
     * **Default Value Date**
-      If users can choose rates other than SPOT, then this will be required to
-      be the default rate.
+      If users can choose rates other than *Two business days*, then this will
+      be required to be the default rate.
 
 - *Accounting > Configuration > Journals*
 
@@ -145,11 +145,11 @@ Setup
       afex.url
 
     * **Value**
-      the URL *(e.g. https://demo.api.afex.com:7890/api/)*
+      the URL *(e.g. https://api.afex.com:7890/api/)*
 
 
 Usage
------
+=====
 
 - *Accounting > Vendors > Bills > [Open Bill] > Register Payment* or
     *Accounting > Vendors > Bills > [Select Multiple] > [Action Drop Down
@@ -165,9 +165,9 @@ Usage
     If the payment journal can use direct debit payment, then this can be
     enabled or disabled for the trade in question.
 
-    If the system configuration allows users to select **CASH** or **TOM**
-    rates, as well as **SPOT**, then this can be selected for the trade in
-    question.
+    If the system configuration allows users to select **Today** or
+    **Next business day** rates, as well as **Two business days**, then this
+    can be selected for the trade in question.
 
     If the payment journal has a funding balance, a button will be displayed
     to retrieve the current balance for that currency.

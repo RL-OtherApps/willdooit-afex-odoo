@@ -17,17 +17,20 @@ class AccountJournal(models.Model):
         domain=[('deprecated', '=', False)],
         copy=False)
     afex_direct_debit_journal_id = fields.Many2one(
-        'account.journal',
-        string="Direct Debit Journal",
-        copy=False)
+        'account.journal', string="Direct Debit Journal", copy=False,
+        help=("If this journal settles in AUD, then settlement can be"
+              " by direct debit. Choose the Odoo Journal used for direct"
+              " debit payments if you wish this to use this option. The"
+              " account number for direct debit payments will be picked"
+              " up from this journal."))
     afex_direct_debit = fields.Boolean(
-        string='Direct Debit by Default',
-        default=False,
-        copy=False)
+        string='Direct Debit by Default', default=False, copy=False,
+        help=("Enable this if you want direct debit to be the default"
+              " settlement option."))
     afex_scheduled_payment = fields.Boolean(
-        string='AFEX Scheduled Payment',
-        default=False,
-        copy=False)
+        string='AFEX Scheduled Payment', default=False, copy=False,
+        help=("If journal type is 'Bank', then this can be enabled to create"
+              " transactions using pre-purchased funding balances."))
 
     can_direct_debit = fields.Boolean(
         string='Can direct debit?',

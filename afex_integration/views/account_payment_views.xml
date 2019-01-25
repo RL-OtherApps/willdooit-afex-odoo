@@ -18,10 +18,10 @@
                 <field name="afex_stl_currency_id" readonly="1" options="{'no_create': True, 'no_open': True}" groups="base.group_multi_currency"/>
             </div>
             <field name="afex_funding_balance" attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False),
-                                                                     ('afex_funding_balance_retrieved', '=', False)]}"/>
+                                                                     ('afex_funding_balance_retrieved_date', '=', False)]}"/>
             <field name="afex_funding_balance_available" attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False),
-                                                                               ('afex_funding_balance_retrieved', '=', False)]}"/>
-            <field name="afex_funding_balance_retrieved" invisible="1"/>
+                                                                               ('afex_funding_balance_retrieved_date', '=', False)]}"/>
+            <field name="afex_funding_balance_retrieved_date" invisible="1"/>
             <field name="has_afex_fees" invisible="1"/>
             <field name="afex_fee_amount_ids" attrs="{'invisible': ['|', ('is_afex', '=', False), ('has_afex_fees', '=', False)]}">
                 <tree editable="bottom" create="0" edit="0" delete="0">
@@ -30,14 +30,15 @@
                 </tree>
             </field>
             <field name="afex_quote_id" invisible="1"/>
-            <field name="afex_rate_display" readonly="1" attrs="{'invisible': ['|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True)]}"/>
+            <field name="afex_rate_display" readonly="1" attrs="{'invisible': ['|', '|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True),
+                                                                               ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}"/>
         </div>
 
         <field name="payment_date" position="attributes">
             <attribute name="attrs">{'readonly': [('is_afex', '=', True), ('afex_scheduled_payment', '=', False)]}</attribute>
             <attribute name="force_save">True</attribute>
         </field>
-        <field name="payment_date" position="after">
+        <field name="payment_date" position="before">
             <field name="afex_allow_earliest_value_date" invisible="1"/>
             <field name="afex_value_date_type" attrs="{'invisible': ['|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True)],
                                                        'readonly': [('afex_allow_earliest_value_date', '=', False)]}"/>
@@ -49,16 +50,16 @@
             <button name="refresh_quote" string="Re-Quote" type="object"
                     attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True), ('afex_quote_id', '=', 0)]}"/>
             <button name="refresh_quote" string="Retrieve Balance" type="object" class="btn-primary"
-                    attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved', '=', True)]}"/>
+                    attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved_date', '!=', False)]}"/>
             <button name="refresh_quote" string="Retrieve Balance" type="object"
-                    attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved', '=', False)]}"/>
+                    attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved_date', '=', False)]}"/>
         </button>
         <button name="action_validate_invoice_payment" position="attributes">
-            <attribute name="attrs">{'invisible': [('is_afex', '=', True), ('afex_funding_balance_retrieved', '=', False),
+            <attribute name="attrs">{'invisible': [('is_afex', '=', True), ('afex_funding_balance_retrieved_date', '=', False),
                                                    '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}</attribute>
         </button>
         <button special="cancel" position="after">
-            <div id="afex_tandc" attrs="{'invisible': ['|', ('is_afex', '=', False), '&amp;', ('afex_funding_balance_retrieved', '=', False),
+            <div id="afex_tandc" attrs="{'invisible': ['|', ('is_afex', '=', False), '&amp;', ('afex_funding_balance_retrieved_date', '=', False),
                                                        '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}" style="font-size:x-small;">
                 <field name="afex_terms_display" readonly="1"/>
             </div>
@@ -83,10 +84,10 @@
                 <field name="afex_stl_currency_id" readonly="1" options="{'no_create': True, 'no_open': True}" groups="base.group_multi_currency"/>
             </div>
             <field name="afex_funding_balance" attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False),
-                                                                     ('afex_funding_balance_retrieved', '=', False)]}"/>
+                                                                     ('afex_funding_balance_retrieved_date', '=', False)]}"/>
             <field name="afex_funding_balance_available" attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False),
-                                                                               ('afex_funding_balance_retrieved', '=', False)]}"/>
-            <field name="afex_funding_balance_retrieved" invisible="1"/>
+                                                                               ('afex_funding_balance_retrieved_date', '=', False)]}"/>
+            <field name="afex_funding_balance_retrieved_date" invisible="1"/>
             <field name="has_afex_fees" invisible="1"/>
             <field name="afex_fee_amount_ids" attrs="{'invisible': ['|', ('is_afex', '=', False), ('has_afex_fees', '=', False)]}">
                 <tree editable="bottom" create="0" edit="0" delete="0">
@@ -95,19 +96,21 @@
                 </tree>
             </field>
             <field name="afex_quote_id" invisible="1"/>
-            <field name="afex_rate_display" readonly="1" attrs="{'invisible': ['|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True)]}"/>
+            <field name="afex_rate_display" readonly="1" attrs="{'invisible': ['|', '|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True),
+                                                                               ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}"/>
         </div>
 
         <field name="group_invoices" position="attributes">
             <attribute name="attrs">{'readonly': [('is_afex', '=', True)]}</attribute>
             <attribute name="force_save">True</attribute>
+            <attribute name="invisible">context.get('from_invoice_form', False)</attribute>
         </field>
 
         <field name="payment_date" position="attributes">
             <attribute name="attrs">{'readonly': [('is_afex', '=', True), ('afex_scheduled_payment', '=', False)]}</attribute>
             <attribute name="force_save">True</attribute>
         </field>
-        <field name="payment_date" position="after">
+        <field name="payment_date" position="before">
             <field name="afex_allow_earliest_value_date" invisible="1"/>
             <field name="afex_value_date_type" attrs="{'invisible': ['|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True)],
                                                        'readonly': [('afex_allow_earliest_value_date', '=', False)]}"/>
@@ -119,16 +122,16 @@
             <button name="refresh_quote" string="Re-Quote" type="object"
                     attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True), ('afex_quote_id', '=', 0)]}"/>
             <button name="refresh_quote" string="Retrieve Balance" type="object" class="btn-primary"
-                    attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved', '=', True)]}"/>
+                    attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved_date', '!=', False)]}"/>
             <button name="refresh_quote" string="Retrieve Balance" type="object"
-                    attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved', '=', False)]}"/>
+                    attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved_date', '=', False)]}"/>
         </button>
         <button name="create_payments" position="attributes">
-            <attribute name="attrs">{'invisible': [('is_afex', '=', True), ('afex_funding_balance_retrieved', '=', False),
+            <attribute name="attrs">{'invisible': [('is_afex', '=', True), ('afex_funding_balance_retrieved_date', '=', False),
                                                    '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}</attribute>
         </button>
         <button special="cancel" position="after">
-            <div id="afex_tandc" attrs="{'invisible': ['|', ('is_afex', '=', False), '&amp;', ('afex_funding_balance_retrieved', '=', False),
+            <div id="afex_tandc" attrs="{'invisible': ['|', ('is_afex', '=', False), '&amp;', ('afex_funding_balance_retrieved_date', '=', False),
                                                        '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}" style="font-size:x-small;">
                 <field name="afex_terms_display" readonly="1"/>
             </div>
@@ -159,27 +162,26 @@
             <field name="afex_scheduled_payment" invisible="1"/>
             <field name="afex_direct_debit_journal_id" invisible="1"/>
             <field name="afex_direct_debit" attrs="{'invisible': ['|', ('is_afex', '=', False), ('afex_direct_debit_journal_id', '=', False)]}"/>
-            <label for="afex_stl_amount" attrs="{'invisible': ['|', '|', '|', ('is_afex', '=', False), ('afex_stl_amount', '=', 0),
-                                                               ('state', '!=', 'draft'), ('afex_scheduled_payment', '=', True)]}"/>
-            <div class="o_row" attrs="{'invisible': ['|', '|', '|', ('is_afex', '=', False), ('afex_stl_amount', '=', 0),
-                                                     ('state', '!=', 'draft'), ('afex_scheduled_payment', '=', True)]}">
+            <label for="afex_stl_amount" attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_stl_amount', '=', 0), ('afex_scheduled_payment', '=', True)]}"/>
+            <div class="o_row" attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_stl_amount', '=', 0), ('afex_scheduled_payment', '=', True)]}">
                 <field name="afex_stl_amount" readonly="1"/>
                 <field name="afex_stl_currency_id" readonly="1" options="{'no_create': True, 'no_open': True}" groups="base.group_multi_currency"/>
             </div>
-            <field name="afex_funding_balance" attrs="{'invisible': ['|', '|', '|', ('is_afex', '=', False), ('state', '!=', 'draft'),
-                                                                     ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved', '=', False)]}"/>
-            <field name="afex_funding_balance_available" attrs="{'invisible': ['|', '|', '|', ('is_afex', '=', False), ('state', '!=', 'draft'),
-                                                                               ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved', '=', False)]}"/>
-            <field name="afex_funding_balance_retrieved" invisible="1"/>
+            <field name="afex_funding_balance" attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False),
+                                                                     ('afex_funding_balance_retrieved_date', '=', False)]}"/>
+            <field name="afex_funding_balance_available" attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', False),
+                                                                               ('afex_funding_balance_retrieved_date', '=', False)]}"/>
+            <field name="afex_funding_balance_retrieved_date" invisible="1"/>
             <field name="has_afex_fees" invisible="1"/>
-            <field name="afex_fee_amount_ids" attrs="{'invisible': [('is_afex', '=', False), '|', ('has_afex_fees', '=', False), ('state', '!=', 'draft')]}">
+            <field name="afex_fee_amount_ids" attrs="{'invisible': ['|', ('is_afex', '=', False), ('has_afex_fees', '=', False)]}">
                 <tree editable="bottom" create="0" edit="0" delete="0">
                     <field name="afex_fee_amount" readonly="1"/>
                     <field name="afex_fee_currency_id" readonly="1" options="{'no_create': True, 'no_open': True}" groups="base.group_multi_currency"/>
                 </tree>
             </field>
             <field name="afex_quote_id" invisible="1"/>
-            <field name="afex_rate_display" readonly="1" attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('state', '!=', 'draft'), ('afex_scheduled_payment', '=', True)]}"/>
+            <field name="afex_rate_display" readonly="1" attrs="{'invisible': ['|', '|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True),
+                                                                               ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}"/>
         </div>
 
         <field name="payment_date" position="attributes">
@@ -187,33 +189,34 @@
                                                   ('afex_scheduled_payment', '=', False)]}</attribute>
             <attribute name="force_save">True</attribute>
         </field>
-        <field name="payment_date" position="after">
+        <field name="payment_date" position="before">
             <field name="afex_allow_earliest_value_date" invisible="1"/>
             <field name="afex_value_date_type" attrs="{'invisible': ['|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True)],
                                                        'readonly': ['|', ('state', '!=', 'draft'), ('afex_allow_earliest_value_date', '=', False)]}"/>
         </field>
 
         <button name="post" position="before">
-            <button name="refresh_quote" string="Quote" type="object" class="btn-primary"
+            <button name="refresh_quote" string="Quote" type="object" class="btn-primary" context="{'not_wizard': True}"
                     attrs="{'invisible': ['|', '|', '|', ('is_afex', '=', False), ('afex_quote_id', '>', 0), ('state', '!=', 'draft'), ('afex_scheduled_payment', '=', True)]}"/>
-            <button name="refresh_quote" string="Re-Quote" type="object"
+            <button name="refresh_quote" string="Re-Quote" type="object" context="{'not_wizard': True}"
                     attrs="{'invisible': ['|', '|', '|', ('is_afex', '=', False), ('afex_quote_id', '=', 0), ('state', '!=', 'draft'), ('afex_scheduled_payment', '=', True)]}"/>
-            <button name="refresh_quote" string="Retrieve Balance" type="object" class="btn-primary"
+            <button name="refresh_quote" string="Retrieve Balance" type="object" class="btn-primary" context="{'not_wizard': True}"
                     attrs="{'invisible': ['|', '|', '|', ('is_afex', '=', False), ('state', '!=', 'draft'),
-                                          ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved', '=', True)]}"/>
-            <button name="refresh_quote" string="Retrieve Balance" type="object"
+                                          ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved_date', '!=', False)]}"/>
+            <button name="refresh_quote" string="Retrieve Balance" type="object" context="{'not_wizard': True}"
                     attrs="{'invisible': ['|', '|', '|', ('is_afex', '=', False), ('state', '!=', 'draft'),
-                                          ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved', '=', False)]}"/>
+                                          ('afex_scheduled_payment', '=', False), ('afex_funding_balance_retrieved_date', '=', False)]}"/>
         </button>
         <button name="post" position="attributes">
-            <attribute name="state"></attribute>
-            <attribute name="attrs">{'invisible': ['|', ('is_afex', '=', True), '&amp;', '&amp;', ('afex_funding_balance_retrieved', '=', False),
+            <attribute name="states"></attribute>
+            <attribute name="attrs">{'invisible': ['|', '&amp;', '&amp;', ('is_afex', '=', True), ('afex_funding_balance_retrieved_date', '=', False),
                                                    '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0), ('state', '!=', 'draft')]}</attribute>
+            <attribute name="string">Validate</attribute>
         </button>
 
         <xpath expr="//field[@name='payment_type']/../.." position="after">
             <div id="afex_tandc" style="font-size:x-small;"
-                 attrs="{'invisible':['|', '|', ('is_afex', '=', False), ('state', '!=', 'draft'), '&amp;', ('afex_funding_balance_retrieved', '=', False),
+                 attrs="{'invisible':['|', '|', ('is_afex', '=', False), ('state', '!=', 'draft'), '&amp;', ('afex_funding_balance_retrieved_date', '=', False),
                                       '|', ('afex_quote_id', '=', False), ('afex_quote_id', '=', 0)]}">
                 <field name="afex_terms_display" readonly="1"/>
             </div>

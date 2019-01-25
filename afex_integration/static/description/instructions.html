@@ -2,15 +2,15 @@
 <p>This module allows vendor banks to be synchronised with AFEX to create AFEX Beneficiaries. It also allows payments within Odoo to book payments to vendors through AFEX.</p>
 <p>You must have an AFEX account, and request/receive an API Key from AFEX before this module can be used. AFEX's terms and conditions apply.</p>
 <p>AFEX homepage: <a href="https://www.afex.com/">https://www.afex.com/</a></p>
-<h2 id="setup">Setup</h2>
+<h1 id="setup">Setup</h1>
 <ul>
 <li><p><em>Settings &gt; Users &amp; Companies &gt; Companies &gt; General Information Tab</em>
 <blockquote>
 <p>These settings must be set for each Odoo defined company which will trade with AFEX.</p>
 <ul>
 <li><strong>AFEX API Key</strong> - Supplied by AFEX and entered here.</li>
-<li><strong>Allow Earliest Value Date</strong> - Leave this disabled if your trade requests should always choose the SPOT rate. If you wish users to be able to choose CASH or TOM rates, then enable this option.</li>
-<li><strong>Default Value Date</strong> - If users can choose rates other than SPOT, then this will be required to be the default rate.</li>
+<li><strong>Allow Earliest Value Date</strong> - Leave this disabled if your trade requests should always choose the <em>Two business days</em> rate. If you wish users to be able to choose <em>Today</em> or <em>Next business day</em> rates, then enable this option.</li>
+<li><strong>Default Value Date</strong> - If users can choose rates other than <em>Two business days</em>, then this will be required to be the default rate.</li>
 </ul>
 </blockquote></li>
 <li><p><em>Accounting &gt; Configuration &gt; Journals</em></p>
@@ -71,17 +71,17 @@
 <p>The URL defaults to the live URL (https://api.afex.com:7890/api/).  If need be, it can be changed in the System Parameters.</p>
 <ul>
 <li><strong>Key</strong> - afex.url</li>
-<li><strong>Value</strong> - the URL <em>(e.g. <a href="https://demo.api.afex.com:7890/api/">https://demo.api.afex.com:7890/api/</a>)</em></li>
+<li><strong>Value</strong> - the URL <em>(e.g. <a href="https://api.afex.com:7890/api/">https://api.afex.com:7890/api/</a>)</em></li>
 </ul>
 </blockquote></li>
 </ul>
-<h2 id="usage">Usage</h2>
+<h1 id="usage">Usage</h1>
 <ul>
 <li><dl>
 <dt><em>Accounting &gt; Vendors &gt; Bills &gt; [Open Bill] &gt; Register Payment</em> or <em>*Accounting &gt; Vendors &gt; Bills &gt; [Select Multiple] &gt; [Action Drop Down and Register Payment]</em> or <em>*Accounting &gt; Vendors &gt; Payments &gt; [Create]</em></dt>
 <p>To make a foreign currency payment using an <strong>AFEX Journal</strong> for a vendor who has an associated <strong>confirmed AFEX Beneficiary</strong>. Choose the correct payment journal, which will determine the settlement currency. The payment amount and currency can be chosen. If part or overpaying a single bill, an option will be given to choose if the balance is to be kept open or if it is to be written off.</p>
 <p>If the payment journal can use direct debit payment, then this can be enabled or disabled for the trade in question.</p>
-<p>If the system configuration allows users to select <strong>CASH</strong> or <strong>TOM</strong> rates, as well as <strong>SPOT</strong>, then this can be selected for the trade in question.</q>
+<p>If the system configuration allows users to select <strong>Today</strong> or <strong>Next business day</strong> rates, as well as <strong>Two business days</strong>, then this can be selected for the trade in question.</q>
 <p>If the payment journal has a funding balance, a button will be displayed to retrieve the current balance for that currency.</p>
 <p>If the payment journal is a trade journal, a button will be displayed to retrieve a quote. The system will retrieve the exchange rate from AFEX and display the <strong>payment amount</strong> conversion using the exchange rate. Quote information is displayed on the payment screen.</p>
 <p>If applicable, the AFEX fee amount(s) and currency will be displayed as well.</p>
