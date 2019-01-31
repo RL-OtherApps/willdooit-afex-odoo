@@ -13,7 +13,7 @@ class AFEX(models.TransientModel):
     def afex_response(self, para_url,
                       payment=False, head=False, data=False, post=False):
         base_web = self.env['ir.config_parameter'].get_param('afex.url') \
-            or "https://demo.api.afex.com:7890/api/"
+            or "https://api.afex.com:7890/api/"
         if base_web[-1:] != '/':
             base_web += '/'
         url = "%s%s" % (base_web, para_url)

@@ -16,13 +16,15 @@ AFEX homepage: `https://www.afex.com/ <https://www.afex.com/>`_
 
 
 Setup
------
+=====
 
 - *Accounting > Configuration > Settings > Configure your company data > Configuration Tab* or *Settings > Users > Companies > Configuration Tab*
 
-    For each Odoo defined company which will trade with AFEX:
+    These settings must be set for each Odoo defined company which will trade
+    with AFEX.
 
-      - **AFEX API Key** - Supplied by AFEX and entered here.
+      * **AFEX API Key**
+        Supplied by AFEX and entered here.
 
 
 - *Accounting > Configuration > Journals*
@@ -35,31 +37,37 @@ Setup
 
     * **Journal Entries**
 
-      - **Default Debit / Credit Account** - G/L account for AFEX clearing.
-          Should be set up as a non reconcilable liability account which is
-          reviewed periodically. It could also be a revenue or expense account.
-          The balance which accumulates in here will be the difference between
-          the Odoo anticipated settlement from stored currency rates, and the
-          actual settlement value to AFEX. It may be treated as a straight
-          expense, or it may be allocated to other areas of the accounts.
+      - **Default Debit / Credit Account**
+        G/L account for AFEX clearing. Should be set up as a non reconcilable
+        liability account which is reviewed periodically. It could also be a
+        revenue or expense account. The balance which accumulates in here will
+        be the difference between the Odoo anticipated settlement from stored
+        currency rates, and the actual settlement value to AFEX. It may be
+        treated as a straight expense, or it may be allocated to other areas
+        of the accounts.
 
-      - **Currency** - Leave blank for settlement in the company currency,
-          or enter a currency if settling in another in-between currency. The
-          payment will use the currency from here when posting to the clearing
-          account defined above.
+      - **Currency**
+        Leave blank for settlement in the company currency, or enter a currency
+        if settling in another in-between currency. The payment will use the
+        currency from here when posting to the clearing account defined above.
 
-      - **AFEX Journal** - Enabled.
+      - **AFEX Journal**
+        Enabled.
 
-      -**AFEX Invoicing Partner** - This is the partner to which the liability
-          will be posted when making an AFEX trade.
+      - **AFEX Invoicing Partner**
+        This is the partner to which the liability will be posted when making
+        an AFEX trade.
 
-      - **AFEX Fees Account** - Select an account for expensing AFEX fees.
+      - **AFEX Fees Account**
+        Select an account for expensing AFEX fees.
 
     * **Advanced Settings**
 
-      - **Debit Methods** - None should be selected.
+      - **Debit Methods**
+        None should be selected.
 
-      - **Payment Methods** - Enable manual.
+      - **Payment Methods**
+        Enable manual.
 
 - *Partner > Sales and Purchases Tab > Bank Account(s)*
 
@@ -75,13 +83,15 @@ Setup
     beneficiaries wity incomplete information will tell you of missing required
     data, but it varies due to many factors.
 
-    * **AFEX Corporate** - If the beneficiary is not an individual.
+    * **AFEX Corporate**
+      If the beneficiary is not an individual.
 
     * **AFEX Bank Country**
 
     * **AFEX Intermediary Bank Country**
 
-    * **AFEX Sync Information** - Various values.
+    * **AFEX Sync Information**
+      Various values.
 
     Other required values are picked up from the partner address area.
 
@@ -101,17 +111,23 @@ Setup
     A general indication of the status is shown  on the *Sales and Purchases*
     Tab.
 
-    * **AFEX Status** - Either *Sync Needed* or *Synchronised*.
+    * **AFEX Status**
+      Either *Sync Needed* or *Synchronised*.
 
 - *Settings > Technical > System Parameters*
 
     The URL defaults to the live URL (https://api.afex.com:7890/api/).  If
     need be, it can be changed in the System Parameters.
 
-    * **Key** - afex.url
+    * **Key**
+      afex.url
 
-    * **Value** - the URL *(e.g. https://demo.api.afex.com:7890/api/)*
+    * **Value**
+      the URL *(e.g. https://api.afex.com:7890/api/)*
 
+
+Usage
+=====
 
 - *Accounting > Purchases > Vendor Bills > [Open Bill] > Register Payment* or *Accounting > Purchases > Vendor Bills > [Select Multiple] > [Action Drop Down and Register Payment]*
 
