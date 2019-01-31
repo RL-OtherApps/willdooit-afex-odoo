@@ -15,8 +15,8 @@ this module can be used. AFEX's terms and conditions apply.
 AFEX homepage: `https://www.afex.com/ <https://www.afex.com/>`_
 
 
-Setup
-=====
+Setup for Odoo v10
+==================
 
 - *Accounting > Configuration > Settings > Configure your company data > General Information Tab* or *Settings > Users > Companies > General Information Tab*
 
@@ -149,8 +149,8 @@ Setup
       the URL *(e.g. https://api.afex.com:7890/api/)*
 
 
-Usage
-=====
+Usage for Odoo v10
+==================
 
 - *Accounting > Purchases > Vendor Bills > [Open Bill] > Register Payment* or *Accounting > Purchases > Vendor Bills > [Select Multiple] > [Action Drop Down and Register Payment]* or *Accounting > Purchases > Payments > [Create]*  
 
