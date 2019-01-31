@@ -1,6 +1,6 @@
 {
     "name": "AFEX Global Vendor Payments for Businesses",
-    "version": "12.0.3.3",
+    "version": "12.0.3.4",
     "summary": "Make payments to vendors in a foreign currency using AFEX, "
                "by WilldooIT",
     "description": """
@@ -16,8 +16,8 @@ this module can be used. AFEX's terms and conditions apply.
 
 AFEX homepage: https://www.afex.com/
 
-Setup
-=====
+Setup for Odoo v12
+==================
 
 - *Settings > Users & Companies > Companies > General Information Tab*
 
@@ -148,8 +148,8 @@ Setup
       the URL *(e.g. https://api.afex.com:7890/api/)*
 
 
-Usage
-=====
+Usage for Odoo v12
+==================
 
 - *Accounting > Vendors > Bills > [Open Bill] > Register Payment* or
     *Accounting > Vendors > Bills > [Select Multiple] > [Action Drop Down
