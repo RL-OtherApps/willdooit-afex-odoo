@@ -77,6 +77,18 @@
                                                        'readonly': [('afex_allow_earliest_value_date', '=', False)]}"/>
         </field>
 
+        <field name="communication" position="after">
+            <field name="afex_purpose_of_payment_id" options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"
+                   attrs="{'readonly': ['|', '|', ('afex_bank_country_id', '=', False),
+                                        ('currency_id', '=', False), ('partner_country_id', '=', False)],
+                           'invisible': [('is_afex', '=', False)]}"
+                   domain="[('afex_bank_country_id', '=', afex_bank_country_id), ('currency_id', '=', currency_id),
+                            ('partner_country_id', '=', partner_country_id)]"/>
+            <field name="afex_purpose_of_payment" attrs="{'invisible': [('is_afex', '=', False)]}"/>
+            <field name="partner_country_id" invisible="1"/>
+            <field name="afex_bank_country_id" invisible="1"/>
+        </field>
+
         <button name="post" position="before">
             <button name="refresh_quote" string="Quote" type="object" class="btn-primary"
                     attrs="{'invisible': ['|', '|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True), ('afex_quote_id', '>', 0)]}"/>
@@ -147,6 +159,18 @@
             <field name="afex_allow_earliest_value_date" invisible="1"/>
             <field name="afex_value_date_type" attrs="{'invisible': ['|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True)],
                                                        'readonly': [('afex_allow_earliest_value_date', '=', False)]}"/>
+        </field>
+
+        <field name="communication" position="after">
+            <field name="afex_purpose_of_payment_id" options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"
+                   attrs="{'readonly': ['|', '|', ('afex_bank_country_id', '=', False),
+                                        ('currency_id', '=', False), ('partner_country_id', '=', False)],
+                           'invisible': [('is_afex', '=', False)]}"
+                   domain="[('afex_bank_country_id', '=', afex_bank_country_id), ('currency_id', '=', currency_id),
+                            ('partner_country_id', '=', partner_country_id)]"/>
+            <field name="afex_purpose_of_payment" attrs="{'invisible': [('is_afex', '=', False)]}"/>
+            <field name="partner_country_id" invisible="1"/>
+            <field name="afex_bank_country_id" invisible="1"/>
         </field>
 
         <button name="create_payment" position="before">
@@ -227,6 +251,18 @@
             <field name="afex_allow_earliest_value_date" invisible="1"/>
             <field name="afex_value_date_type" attrs="{'invisible': ['|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True)],
                                                        'readonly': ['|', ('state', '!=', 'draft'), ('afex_allow_earliest_value_date', '=', False)]}"/>
+        </field>
+
+        <field name="communication" position="after">
+            <field name="afex_purpose_of_payment_id" options="{'no_open': True, 'no_create': True, 'no_create_edit': True}"
+                   attrs="{'readonly': ['|', '|', '|', ('state', '!=', 'draft'), ('afex_bank_country_id', '=', False),
+                                        ('currency_id', '=', False), ('partner_country_id', '=', False)],
+                           'invisible': [('is_afex', '=', False)]}"
+                   domain="[('afex_bank_country_id', '=', afex_bank_country_id), ('currency_id', '=', currency_id),
+                            ('partner_country_id', '=', partner_country_id)]"/>
+            <field name="afex_purpose_of_payment" attrs="{'readonly': [('state', '!=', 'draft')], 'invisible': [('is_afex', '=', False)]}"/>
+            <field name="partner_country_id" invisible="1"/>
+            <field name="afex_bank_country_id" invisible="1"/>
         </field>
 
         <button name="post" position="before">

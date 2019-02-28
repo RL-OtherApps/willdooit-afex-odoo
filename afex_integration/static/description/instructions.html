@@ -1,4 +1,5 @@
 <h1 id="global-vendor-payments-for-businesses">Global Vendor Payments for Businesses</h1>
+<h2>(10.0.4.0)</h2>
 <p>This module allows vendor banks to be synchronised with AFEX to create AFEX Beneficiaries. It also allows payments within Odoo to book payments to vendors through AFEX.</p>
 <p>You must have an AFEX account, and request/receive an API Key from AFEX before this module can be used. AFEX's terms and conditions apply.</p>
 <p>AFEX homepage: <a href="https://www.afex.com/">https://www.afex.com/</a></p>
@@ -63,10 +64,12 @@
 <li><strong>Currency</strong></li>
 </ul>
 <p>Other values will depend on the beneficiary. Generally, attempting to sync beneficiaries with incomplete information will tell you of missing required data, but it varies due to many factors.</p>
+<p>Remittance Line 2 options are based on <strong>Currency</strong>, <strong>AFEX Bank Country</strong> and <strong>Partner Country</strong>.</p>
 <ul>
 <li><strong>AFEX Corporate</strong> - If the beneficiary is not an individual.</li>
 <li><strong>AFEX Bank Country</strong></li>
 <li><strong>AFEX Intermediary Bank Country</strong></li>
+<li><strong>Remittance Line 2</strong> - Options supplied by AFEX.</li>
 <li><strong>AFEX Sync Information</strong> - Various values.</li>
 </ul>
 <p>Other required values are picked up from the partner address area.</p>
@@ -95,11 +98,12 @@
 </ul>
 </blockquote></li>
 </ul>
-<h1 id="usage">Usage for Odoo v10</h2>
+<h1 id="usage">Usage for Odoo v10</h1>
 <ul>
 <li><dl>
 <dt><em>Accounting &gt; Purchases &gt; Vendor Bills &gt; [Open Bill] &gt; Register Payment</em> or <em>*Accounting &gt; Purchases &gt; Vendor Bills &gt; [Select Multiple] &gt; [Action Drop Down and Register Payment]</em> or <em>*Accounting &gt; Purchases &gt; Payments &gt; [Create]</em></dt>
 <p>To make a foreign currency payment using an <strong>AFEX Journal</strong> for a vendor who has an associated <strong>confirmed AFEX Beneficiary</strong>. Choose the correct payment journal, which will determine the settlement currency. The payment amount and currency can be chosen. If part or overpaying a single bill, an option will be given to choose if the balance is to be kept open or if it is to be written off.</p>
+<p>The <strong>Purpose of Payment</strong> can be selected if a different one is needed for this payment.</p>
 <p>If the payment journal can use direct debit payment, then this can be enabled or disabled for the trade in question.</p>
 <p>If the system configuration allows users to select <strong>Today</strong> or <strong>Next business day</strong> rates, as well as <strong>Two business days</strong>, then this can be selected for the trade in question.</q>
 <p>If the payment journal has a funding balance, a button will be displayed to retrieve the current balance for that currency.</p>

@@ -216,6 +216,33 @@ class AccountAbstractPayment(models.AbstractModel):
     # see comment in onchange
     amt_before_onchange = fields.Monetary()
 
+    afex_purpose_of_payment_id = fields.Many2one(
+        'afex.purpose.of.payment',
+        string="Purpose of Payment",
+        copy=False)
+    afex_purpose_of_payment = fields.Char(
+        string="Remittance",
+        size=35,
+        copy=False)
+    partner_country_id = fields.Many2one(
+        related='partner_id.country_id',
+        readonly=True,
+        store=True)
+    afex_bank_country_id = fields.Many2one(
+        'res.country',
+        compute='_compute_afex_bank_country_id',
+        string="AFEX Bank Country",
+        readonly=True,
+        store=True)
+
+    @api.depends('is_afex', 'partner_id', 'currency_id')
+    def _compute_afex_bank_country_id(self):
+        for payment in self.filtered(lambda p: p.is_afex and p.currency_id
+                                     and p.partner_id):
+            afex_bank = payment.partner_id.afex_bank_for_currency(
+                payment.currency_id)
+            payment.afex_bank_country_id = afex_bank.afex_bank_country_id.id
+
     @api.onchange('journal_id')
     def _onchange_journal_extra(self):
         if self.journal_id and self.is_afex and self.passed_currency_id:
@@ -272,6 +299,54 @@ class AccountAbstractPayment(models.AbstractModel):
                     payment_date = fields.Date.to_string(
                         payment_date)
         self.payment_date = payment_date
+
+    @api.onchange('is_afex', 'partner_id', 'currency_id')
+    def onchange_purpose_of_payment(self):
+        self.afex_purpose_of_payment_id = False
+        if (self.is_afex and self.afex_bank_country_id and self.currency_id
+                and self.partner_country_id):
+            # Get purpose of payments
+            url = ('purposeOfPayment?BankCountryCode=%s&Currency=%s'
+                   '&BeneficiaryCountryCode=%s&HighValue=TRUE'
+                   % (self.afex_bank_country_id.code, self.currency_id.name,
+                      self.partner_country_id.code)
+                   )
+            response_json = self.env['afex.connector'].afex_response(
+                url)
+            if response_json.get('ERROR', True):
+                raise UserError(
+                    _("Error while getting purpose of payment: %s") %
+                      (response_json.get('message', ''))
+                )
+
+            # Create/activate purpose of payments retrieved
+            Purpose = self.env['afex.purpose.of.payment']
+            purposes = Purpose.search([
+                ('afex_bank_country_id', '=', self.afex_bank_country_id.id),
+                ('currency_id', '=', self.currency_id.id),
+                ('partner_country_id', '=', self.partner_country_id.id),
+                ('active', 'in', [False, True]),
+                ])
+            purposes_retrieved = Purpose
+            for result in response_json.get('items', []):
+                # Checked if purpose of payment code is already existing for
+                #   bank country, partner country and currency. If not create
+                #   new purpose of payment.
+                purpose = purposes.filtered(lambda p: p.code==result['Code'])
+                if not purpose:
+                    purpose = Purpose.create(
+                        {'name': result['Description'],
+                         'code': result['Code'],
+                         'afex_bank_country_id': self.afex_bank_country_id.id,
+                         'currency_id': self.currency_id.id,
+                         'partner_country_id': self.partner_country_id.id,
+                         })
+                elif purpose and not purpose.active:
+                    purpose.write({'active': True})
+                purposes_retrieved |= purpose
+
+            # Deactivate purpose of payments that are not retrieved
+            (purposes - purposes_retrieved).write({'active': False})
 
     @api.depends('afex_fee_amount_ids')
     @api.multi
@@ -528,6 +603,10 @@ class AccountRegisterPayments(models.TransientModel):
             })
         return rec
 
+    afex_fee_amount_ids = fields.One2many(
+        'account.payment.afex.fee', 'register_payment_id',
+        string='AFEX Fee(s)')
+
     @api.multi
     def refresh_quote(self):
         for payment in self:
@@ -546,11 +625,7 @@ class AccountRegisterPayments(models.TransientModel):
             'afex_rate': self.afex_rate,
             'afex_stl_currency_id': self.afex_stl_currency_id.id,
             'afex_stl_amount': self.afex_stl_amount,
-            'afex_fee_amount_ids':
-                [(0, 0, {
-                    'afex_fee_amount': f.afex_fee_amount,
-                    'afex_fee_currency_id': f.afex_fee_currency_id.id,
-                    }) for f in self.afex_fee_amount_ids],
+            'afex_fee_amount_ids': [(6, 0, self.afex_fee_amount_ids.ids)],
             'afex_direct_debit': self.afex_direct_debit,
             'afex_funding_balance': self.afex_funding_balance,
             'afex_funding_balance_available': \
@@ -558,6 +633,8 @@ class AccountRegisterPayments(models.TransientModel):
             'afex_funding_balance_retrieved_date': \
                 self.afex_funding_balance_retrieved_date,
             'afex_reference_no': self.afex_reference_no,
+            'afex_purpose_of_payment_id': self.afex_purpose_of_payment_id.id,
+            'afex_purpose_of_payment': self.afex_purpose_of_payment,
             })
         return result
 
@@ -680,9 +757,11 @@ class AccountPayment(models.Model):
                     "SettlementCcy": payment.afex_stl_currency_id.name,
                     "QuoteId": payment.afex_quote_id,
                     "VendorId": afex_bank.afex_unique_id,
-                    "PurposeOfPayment": payment.communication,
+                    "PurposeOfPayment": payment.afex_purpose_of_payment or '',
                     "ValueDate": payment_date.strftime(AFEX_DATE_FORMAT),
                     }
+            if payment.afex_purpose_of_payment_id:
+                data["POPCode"] = payment.afex_purpose_of_payment_id.code
             response_json = self.env['afex.connector'].afex_response(
                 url, data=data, payment=payment, post=True)
             if response_json.get('ERROR', True):
@@ -836,7 +915,10 @@ class AccountPayment(models.Model):
                     "VendorId": afex_bank.afex_unique_id,
                     "Amount": payment.amount,
                     "PaymentDate": payment_date.strftime(AFEX_DATE_FORMAT),
+                    "PurposeOfPayment": payment.afex_purpose_of_payment or '',
                     }
+            if payment.afex_purpose_of_payment_id:
+                data["POPCode"] = payment.afex_purpose_of_payment_id.code
             response_json = self.env['afex.connector'].afex_response(
                 url, data=data, payment=payment, post=True)
             if response_json.get('ERROR', True):
@@ -937,6 +1019,8 @@ class AccountPaymentAfexFee(models.Model):
 
     payment_id = fields.Many2one(
         'account.payment', ondelete='cascade')
+    register_payment_id = fields.Many2one(
+        'account.register.payment', ondelete='set null')
     afex_fee_amount = fields.Monetary(
         string='AFEX Fee Amount', currency_field='afex_fee_currency_id')
     afex_fee_currency_id = fields.Many2one(
