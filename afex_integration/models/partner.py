@@ -7,10 +7,6 @@ AFEX_ADD_SYNC_DEFINITION = {
         'name': 'Remittance Line 1',
         'length': 35,
         },
-    'RemittanceLine2': {
-        'name': 'Remittance Line 2',
-        'length': 35,
-        },
     'RemittanceLine3': {
         'name': 'Remittance Line 3',
         'length': 35,
@@ -100,6 +96,63 @@ class ResPartnerBank(models.Model):
         default='needed',
         readonly=True
         )
+    afex_purpose_of_payment_id = fields.Many2one(
+        'afex.purpose.of.payment',
+        string="Remittance Line 2",
+        copy=False)
+    partner_country_id = fields.Many2one(
+        related='partner_id.country_id',
+        readonly=True,
+        store=True)
+
+    @api.onchange('is_afex', 'afex_bank_country_id', 'currency_id',
+                  'partner_id')
+    def onchange_purpose_of_payment(self):
+        self.afex_purpose_of_payment_id = False
+        if (self.is_afex and self.afex_bank_country_id and self.currency_id
+                and self.partner_country_id):
+            # Get purpose of payments
+            url = ('purposeOfPayment?BankCountryCode=%s&Currency=%s'
+                   '&BeneficiaryCountryCode=%s&HighValue=TRUE'
+                   % (self.afex_bank_country_id.code, self.currency_id.name,
+                      self.partner_country_id.code)
+                   )
+            response_json = self.env['afex.connector'].afex_response(
+                url)
+            if response_json.get('ERROR', True):
+                raise UserError(
+                    _("Error while getting purpose of payment: %s") %
+                      (response_json.get('message', ''))
+                )
+
+            # Create/activate purpose of payments retrieved
+            Purpose = self.env['afex.purpose.of.payment']
+            purposes = Purpose.search([
+                ('afex_bank_country_id', '=', self.afex_bank_country_id.id),
+                ('currency_id', '=', self.currency_id.id),
+                ('partner_country_id', '=', self.partner_country_id.id),
+                ('active', 'in', [False, True]),
+                ])
+            purposes_retrieved = Purpose
+            for result in response_json.get('items', []):
+                # Checked if purpose of payment code is already existing for
+                #   bank country, partner country and currency. If not create
+                #   new purpose of payment.
+                purpose = purposes.filtered(lambda p: p.code==result['Code'])
+                if not purpose:
+                    purpose = Purpose.create(
+                        {'name': result['Description'],
+                         'code': result['Code'],
+                         'afex_bank_country_id': self.afex_bank_country_id.id,
+                         'currency_id': self.currency_id.id,
+                         'partner_country_id': self.partner_country_id.id,
+                         })
+                elif purpose and not purpose.active:
+                    purpose.write({'active': True})
+                purposes_retrieved |= purpose
+
+            # Deactivate purpose of payments that are not retrieved
+            (purposes - purposes_retrieved).write({'active': False})
 
     @api.multi
     def write(self, vals):
@@ -205,6 +258,7 @@ class ResPartnerBank(models.Model):
                 'BankName': self.bank_id.name or '',
                 'BankAccountNumber': self.acc_number or '',
                 'RemittanceLine1': partner.company_id.name or '',
+                'RemittanceLine2': self.afex_purpose_of_payment_id.code or '',
                 'HighLowValue': '1',  # default as high value
 
                 'Corporate': self.afex_corporate,
@@ -230,6 +284,16 @@ class AFEXAddFields(models.Model):
     bank_id = fields.Many2one('res.partner.bank', required=True)
     field = fields.Selection(AFEX_ADD_SYNC_FIELDS, required=True)
     value = fields.Char(required=True)
+    active = fields.Boolean(
+        compute='_compute_active',
+        readonly=True,
+        store=True)
+
+    @api.depends('field')
+    def _compute_active(self):
+        remittanceline2 = self.filtered(lambda f: f.field == 'RemittanceLine2')
+        remittanceline2.update({'active': False})
+        (self - remittanceline2).update({'active': True})
 
     @api.multi
     @api.constrains('field', 'value')
@@ -280,6 +344,38 @@ class AFEXAddFields(models.Model):
                 'message': '\n'.join(warnings),
                 }
         return result
+
+
+class AFEXPurposeOfPayment(models.Model):
+    _name = 'afex.purpose.of.payment'
+    _description = "AFEX Purpose of Payment"
+
+    name = fields.Char(
+        string="Description",
+        required=True,
+        copy=False)
+    code = fields.Char(
+        string="Code",
+        required=True,
+        copy=False)
+    currency_id = fields.Many2one(
+        'res.currency',
+        string="Currency",
+        required=True,
+        copy=False)
+    afex_bank_country_id = fields.Many2one(
+        'res.country',
+        string="AFEX Bank Country",
+        required=True,
+        copy=False)
+    partner_country_id = fields.Many2one(
+        'res.country',
+        string="Beneficiary Country",
+        required=True,
+        copy=False)
+    active = fields.Boolean(
+        string="Active",
+        default=True)
 
 
 class ResPartner(models.Model):
