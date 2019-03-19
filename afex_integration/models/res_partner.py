@@ -104,6 +104,10 @@ class ResPartnerBank(models.Model):
         related='partner_id.country_id',
         readonly=True,
         store=True)
+    afex_payment_notify_email = fields.Char(
+        string="Payment Notification Email Address",
+        copy=False
+    )
 
     @api.onchange('is_afex', 'afex_bank_country_id', 'currency_id',
                   'partner_id')
@@ -249,7 +253,7 @@ class ResPartnerBank(models.Model):
         data = {'Currency': self.currency_id.name or '',
                 'BeneficiaryName': partner.name or '',
                 'TemplateType': 1,
-                'NotificationEmail': partner.email or '',
+                'NotificationEmail': self.afex_payment_notify_email or '',
                 'BeneficiaryAddressLine1': partner.street or '',
                 'BeneficiaryCity': partner.city or '',
                 'BeneficiaryCountrycode': partner.country_id.code or '',

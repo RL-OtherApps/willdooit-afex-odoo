@@ -2,7 +2,7 @@
 AFEX Global Vendor Payments for Businesses
 =================
 
-Introduction (12.0.4.0)
+Introduction (12.0.4.2)
 =======================
 
 This module allows vendor banks to be synchronised with AFEX to create AFEX
@@ -115,6 +115,8 @@ Setup for Odoo v12
     * **AFEX Bank Country**
 
     * **AFEX Intermediary Bank Country**
+
+    * **Payment Notification Email Address**
 
     * **Remittance Line 2**
       Options supplied by AFEX.
