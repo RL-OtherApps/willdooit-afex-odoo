@@ -40,8 +40,12 @@ AFEX_ADD_SYNC_FIELDS = [
 AFEX_BENE_CODES = {
     100013: 'RemittanceLine1',
     100018: 'BankAddress1',
+    100019: 'BankAddress2',
     100020: 'BankAddress3',
     100022: 'BankName',
+    100030: 'IntermediaryBankCountryCode',
+    100031: 'IntermediaryBankName',
+    100033: 'IntermediaryBankSWIFTBIC',
     }
 
 
@@ -59,7 +63,7 @@ When creating a new Beneficiary:
     Currency comes from the selected bank's currency.
     The Beneficiary name is the name of this Partner.
     All payments to the beneficiary will be via wire.
-    The Notification Email will be the Partner's Email Address.
+    The Notification Email will be the bank's Payment Notification Email Address.
     Beneficiary Address Details come from this Partner (address line 2 is optional).
     The Bank Name is the name of the Partner's Bank Account.
     Bank Account Number is the Partner's Bank Account Number.
@@ -253,11 +257,13 @@ class ResPartnerBank(models.Model):
                 )
         self.sync_from_afex_beneficiary(response_json)
 
+    @api.multi
     def sync_from_afex_beneficiary(self, response_json):
         self.ensure_one()
         bank_data = {}
 
-        # Update RemittanceLine1 and get bank details from AFEX api response
+        # Update RemittanceLine1, Intermediary Bank and Bank details
+        #   from AFEX api response
         for item in response_json.get('items', []):
             code = item.get('InformationCode', False)
             if not code:
@@ -269,40 +275,44 @@ class ResPartnerBank(models.Model):
                 bank_data['name'] = new_data
             elif AFEX_BENE_CODES.get(code) == 'BankAddress1':
                 bank_data['street'] = new_data
+            elif AFEX_BENE_CODES.get(code) == 'BankAddress2':
+                bank_data['street2'] = new_data
             elif AFEX_BENE_CODES.get(code) == 'BankAddress3':
                 bank_data['city'] = new_data
-            elif AFEX_BENE_CODES.get(code) == 'RemittanceLine1':
-                add_info = self.add_afex_info_ids.filtered(
-                    lambda i: i.field == 'RemittanceLine1')
-                if not new_data and add_info:
-                    add_info.unlink()
-                elif new_data and add_info:
-                    add_info.value = new_data
-                elif new_data and not add_info:
-                    add_info_data = {'field': 'RemittanceLine1',
-                                     'value': new_data,
-                                     }
-                    self.add_afex_info_ids = [(0, 0, add_info_data)]
-
-        if 'name' not in bank_data and self.bank_id:
-            bank_data['name'] = self.bank_id.name
+            elif AFEX_BENE_CODES.get(code) in ['RemittanceLine1',
+                                               'IntermediaryBankName',
+                                               'IntermediaryBankSWIFTBIC']:
+                self.update_afex_additional_sync_fields(
+                    AFEX_BENE_CODES.get(code), new_data)
+            elif AFEX_BENE_CODES.get(code) == 'IntermediaryBankCountryCode':
+                country = self.env['res.country'].search(
+                    [('code', '=', new_data)], limit=1)
+                if country:
+                    self.afex_int_bank_country_id = country.id
 
         # Update partner bank's bank
+        if 'name' not in bank_data and self.bank_id:
+            bank_data['name'] = self.bank_id.name
         if bank_data.get('name'):
-            bank_args = [('name', '=', bank_data['name'])]
-            if 'street' in bank_data:
-                bank_args.append(('street', '=', bank_data['street']))
-            if 'city' in bank_data:
-                bank_args.append(('city', '=', bank_data['city']))
-
-            # Create bank data if not existing
             Bank = self.env['res.bank']
-            bank = Bank.search(bank_args, limit=1)
+            bank = Bank.search([('name', '=', bank_data['name'])], limit=1)
             if not bank:
+                # Create bank data if not existing
                 bank = Bank.create(bank_data)
             self.bank_id = bank.id
         else:
             self.bank_id = False
+
+    @api.multi
+    def update_afex_additional_sync_fields(self, field, value):
+        self.ensure_one()
+        add_info = self.add_afex_info_ids.filtered(lambda i: i.field == field)
+        if not value and add_info:
+            add_info.unlink()
+        elif value and add_info:
+            add_info.value = value
+        elif value and not add_info:
+            self.add_afex_info_ids = [(0, 0, {'field': field, 'value': value})]
 
     def return_afex_data(self):
         self.ensure_one()
@@ -321,6 +331,7 @@ class ResPartnerBank(models.Model):
                 'BankName': self.bank_id.name or '',
                 'BankAccountNumber': self.acc_number or '',
                 'BankAddress1': self.bank_id.street or '',
+                'BankAddress2': self.bank_id.street2 or '',
                 'BankAddress3': self.bank_id.city or '',
                 'RemittanceLine1': partner.company_id.name or '',
                 'RemittanceLine2': self.afex_purpose_of_payment_id.code or '',
