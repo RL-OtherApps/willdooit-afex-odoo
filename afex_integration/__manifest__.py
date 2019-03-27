@@ -1,6 +1,6 @@
 {
     "name": "AFEX Global Vendor Payments for Businesses",
-    "version": "12.0.4.0",
+    "version": "12.0.4.1",
     "summary": "Make payments to vendors in a foreign currency using AFEX, "
                "by WilldooIT",
     "description": """
@@ -8,7 +8,7 @@
 Global Vendor Payments for Businesses
 =====================================
 
-Introduction (12.0.4.0)
+Introduction (12.0.4.1)
 =======================
 
 This module allows vendor banks to be synchronised with AFEX to create AFEX
