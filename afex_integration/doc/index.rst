@@ -2,7 +2,7 @@
 AFEX Global Vendor Payments for Businesses
 =================
 
-Introduction (11.0.4.0)
+Introduction (11.0.4.1)
 =======================
 
 This module allows vendor banks to be synchronised with AFEX to create AFEX
