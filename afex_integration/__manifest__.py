@@ -2,7 +2,7 @@
 
 {
     "name": "AFEX Global Vendor Payments for Businesses",
-    "version": "10.0.4.1",
+    "version": "10.0.4.2",
     "summary": "Make payments to vendors in a foreign currency using AFEX, "
                "by WilldooIT",
     "description": """
@@ -10,8 +10,7 @@
 Global Vendor Payments for Businesses
 =====================================
 
-Introduction (10.0.4.1)
-=======================
+Introduction (10.0.4.2)
 
 This module allows vendor banks to be synchronised with AFEX to create AFEX
 Beneficiaries. It also allows payments within Odoo to book payments to vendors
@@ -123,6 +122,8 @@ Setup for Odoo v10
     * **AFEX Bank Country**
 
     * **AFEX Intermediary Bank Country**
+
+    * **Payment Notification Email Address**
 
     * **Remittance Line 2**
       Options supplied by AFEX.
