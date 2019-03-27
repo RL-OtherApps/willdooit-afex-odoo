@@ -9,27 +9,18 @@ from odoo.addons.afex_integration.models.company import VALUE_DATE_TYPES
 
 
 RATE_DISPLAY_MESSAGE = '''
-Foreign Exchange Transactions are powered and provided by Associated Foreign
-Exchange Pty Limited. Rates provided are indicative, for information purposes
-only, and are subject to change.
+Rates provided are indicative, until a transaction is booked by the User.
 '''
 
 AFEX_TERMS_AND_COND = '''
 <p>
-The foreign exchange transaction service is provided by Associated Foreign
-Exchange Australia Pty Limited ABN 119 392 586 and AFSL 305246 (trading as
-"AFEX"). Where foreign exchange transaction information is provided on this
-website, it has been prepared by AFEX without considering the investment
-objectives, financial situation and particular needs of any person. Before
-acting on any general advice on this website, you should consider its
-appropriateness to your circumstances. To the extent permitted by law, AFEX
-makes no warranty as to the accuracy or suitability of this information and
-accepts no responsibility for errors or misstatements, negligent or otherwise.
-Any quotes given are indicative only. The information may be based on
-assumptions or market conditions and may change without notice. No part of the
-information is to be construed as solicitation to make a financial investment.
-For further details, refer to AFEX's
-<a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>.
+Transactions are powered and provided by
+<a target="_blank" href="https://www.afex.com/bstc.php">AFEX</a>.
+&ldquo;AFEX&rdquo; is the marketing trade name for the International Payment
+Solutions and Risk Management Solutions provided by the AFEX group of related
+companies, including parents, subsidiaries, and affiliated entities. Use of
+this service is governed by the AFEX Terms and Conditions accepted by the
+Client.
 </p>
 '''
 
@@ -37,41 +28,19 @@ AFEX_TRADE_TERMS = '''
 <br/>
 <p>
 You acknowledge that by clicking on VALIDATE you have agreed to execute the
-transaction based on the market rates which may differ from the rates initially
-quoted, and you will be bound to the
-<a target="_blank" href="https://www.afex.com/docs/australia_terms&amp;conditions.pdf">AFEX Terms and Conditions</a>,
-<a target="_blank" href="https://www.afex.com/docs/australia/australian_product_disclosure_statement.pdf">Product Disclosure Statement</a>
-and
-<a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>.
-This transaction will be binding on you when AFEX processes your instructions
-made through this website. You acknowledge that your transaction may not be
-processed immediately by AFEX through this website. When AFEX does process
-your Instructions, you will receive a Trade Confirmation via email. The Trade
-Confirmation constitutes an error correction mechanism only; if you do not
-contact AFEX within 24 hours of receipt of the Trade Confirmation, the
-Transaction details will be deemed to be correct.
+transaction. Use of this service is governed by AFEX’s Terms and Conditions
+accepted by the Client. A confirmation of the transaction will be sent to you
+by AFEX.
 </p>
 <img src='/afex_integration/static/image/afex_logo.png'/>
 <p>
-The foreign exchange transaction service is provided by Associated Foreign
-Exchange Australia Pty Limited ABN 119 392 586 and AFSL 305246 (trading as
-"AFEX").
-<br/>
-<br/>
-Where foreign exchange transaction information is provided on this website,
-it has been prepared by AFEX without considering the investment objectives,
-financial situation and particular needs of any person. Before acting on any
-general advice on this website, you should consider its appropriateness to your
-circumstances. To the extent permitted by law, AFEX makes no warranty as to the
-accuracy or suitability of this information and accepts no responsibility for
-errors or misstatements, negligent or otherwise. Any quotes given are
-indicative only. The information may be based on assumptions or market
-conditions and may change without notice. No part of the information is to be
-construed as solicitation to make a financial investment.
-<br/>
-<br/>
-For further details, refer to AFEX's
-<a target="_blank" href="https://www.afex.com/docs/australia/australian_financial_services_guide.pdf">Financial Services Guide</a>
+Transactions are powered and provided by
+<a target="_blank" href="https://www.afex.com/bstc.php">AFEX</a>.
+&ldquo;AFEX&rdquo; is the marketing trade name for the International Payment
+Solutions and Risk Management Solutions provided by the AFEX group of related
+companies, including parents, subsidiaries, and affiliated entities. Use of
+this service is governed by the AFEX Terms and Conditions accepted by the
+Client.
 </p>
 '''
 
