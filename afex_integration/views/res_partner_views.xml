@@ -13,6 +13,7 @@
                 <field name="afex_corporate" attrs="{'invisible': [('is_afex', '=', False)]}"/>
                 <field name="afex_bank_country_id" attrs="{'invisible': [('is_afex', '=', False)]}"/>
                 <field name="afex_int_bank_country_id" attrs="{'invisible': [('is_afex', '=', False)]}"/>
+                <field name="afex_payment_notify_email" attrs="{'invisible': [('is_afex', '=', False)]}"/>
                 <field name="afex_purpose_of_payment_id" widget="selection" force_save="1"
                        attrs="{'readonly': ['|', '|', ('afex_bank_country_id', '=', False),
                                             ('currency_id', '=', False), ('partner_country_id', '=', False)],
