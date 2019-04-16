@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<record id="sync_afex_beneficiary_view_form" model="ir.ui.view">
+    <field name="name">sync.afex.beneficiary.view.form</field>
+    <field name="model">sync.afex.beneficiary</field>
+    <field name="arch" type="xml">
+        <form string="AFEX Beneficiary Sync">
+            <group>
+                <label for="name" name="Retrieved AFEX Beneficiary Data"
+                       colspan="2"/>
+                <field name="name" nolabel="1" colspan="2"/>
+            </group>
+            <footer>
+                <button name="action_sync" string="Sync"
+                        type="object" class="btn-primary"/>
+                <button string="Cancel" class="btn-secondary"
+                        special="cancel"/>
+            </footer>
+        </form>
+    </field>
+</record>
+
+<record id="payment_mw_invoice_view_action" model="ir.actions.act_window">
+    <field name="name">AFEX Beneficiary Sync</field>
+    <field name="type">ir.actions.act_window</field>
+    <field name="res_model">sync.afex.beneficiary</field>
+    <field name="binding_model_id" ref="base.model_res_partner_bank"/>
+    <field name="view_type">form</field>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="sync_afex_beneficiary_view_form"/>
+    <field name="target">new</field>
+</record>
+
+</odoo>

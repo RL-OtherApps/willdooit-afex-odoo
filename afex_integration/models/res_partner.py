@@ -304,6 +304,85 @@ class ResPartnerBank(models.Model):
             self.bank_id = False
 
     @api.multi
+    def sync_from_afex_beneficiary_find(self, response_json):
+        self.ensure_one()
+        partner_bank_data = {
+            'afex_corporate': response_json.get('Corporate', False),
+            'afex_payment_notify_email':
+                response_json.get('NotificationEmail', False),
+            'afex_sync_status': 'done',
+        }
+
+        # Update Bank
+        bank_data = {
+            'name': response_json.get('BankName', False),
+            'street': response_json.get('BankAddress1', False),
+            'street2': response_json.get('BankAddress2', False),
+            'city': response_json.get('BankAddress3', False),
+        }
+        if 'name' not in bank_data and self.bank_id:
+            bank_data['name'] = self.bank_id.name
+        if bank_data.get('name'):
+            Bank = self.env['res.bank']
+            bank = Bank.search([('name', '=', bank_data['name'])], limit=1)
+            if not bank:
+                # Create bank data if not existing
+                bank = Bank.create(bank_data)
+            else:
+                bank.write(bank_data)
+            partner_bank_data['bank_id'] = bank.id
+        else:
+            partner_bank_data['bank_id'] = False
+
+        # Update Partner
+        partner_data = {
+            'street': response_json.get('BeneficiaryAddressLine1', False),
+            'street2': response_json.get('BeneficiaryAddressLine2', False),
+            'city': response_json.get('BeneficiaryCity', False),
+            'zip': response_json.get('BeneficiaryPostalCode', False),
+        }
+        if response_json.get('BeneficiaryName'):
+            partner_data['name'] = response_json['BeneficiaryName']
+        state_code = response_json.get('BeneficiaryRegionCode', False)
+        country_code = response_json.get('BeneficiaryCountryCode', False)
+        country = self.env['res.country'].search(
+            [('code', '=', country_code)], limit=1)
+        partner_data['country_id'] = country.id
+        state = self.env['res.country.state'].search(
+            [('code', '=', state_code), ('country_id', '=', country.id)],
+            limit=1,
+            )
+        partner_data['state_id'] = state.id
+        self.partner_id.with_context(sync_done=True).write(partner_data)
+
+        # Update AFEX Additional Sync Fields
+        for field in AFEX_ADD_SYNC_DEFINITION.keys():
+            self.update_afex_additional_sync_fields(
+                field, response_json.get(field, False))
+
+        # Update Partner Bank
+        if response_json.get('BankAccountNumber'):
+            partner_bank_data['acc_number'] = \
+                response_json['BankAccountNumber']
+        bank_country_code = response_json.get('BankCountryCode', False)
+        bank_country = self.env['res.country'].search(
+            [('code', '=', bank_country_code)], limit=1)
+        partner_bank_data['afex_bank_country_id'] = bank_country.id
+        int_bank_country_code = \
+            response_json.get('IntermediaryBankCountryCode', False)
+        int_bank_country = self.env['res.country'].search(
+            [('code', '=', int_bank_country_code)], limit=1)
+        partner_bank_data['afex_int_bank_country_id'] = int_bank_country.id
+        purpose = self.env['afex.purpose.of.payment'].search(
+            [('code', '=', response_json.get('RemittanceLine2', False)),
+             ('currency_id', '=', self.currency_id.id),
+             ('afex_bank_country_id', '=', bank_country.id),
+             ('partner_country_id', '=', country.id),
+             ], limit=1)
+        partner_bank_data['afex_purpose_of_payment_id'] = purpose.id
+        self.write(partner_bank_data)
+
+    @api.multi
     def update_afex_additional_sync_fields(self, field, value):
         self.ensure_one()
         add_info = self.add_afex_info_ids.filtered(lambda i: i.field == field)
@@ -472,7 +551,8 @@ class ResPartner(models.Model):
     @api.multi
     def write(self, vals):
         res = super(ResPartner, self).write(vals)
-        if set(vals.keys()) &\
+        if not self.env.context.get('sync_done') and\
+                set(vals.keys()) &\
                 set(['name', 'email', 'street', 'city',
                     'country_id', 'state_id', 'company_id']):
             for partner in self:

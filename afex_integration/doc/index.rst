@@ -2,7 +2,7 @@
 AFEX Global Vendor Payments for Businesses
 =================
 
-Introduction (12.0.4.2)
+Introduction (12.0.5.0)
 =======================
 
 This module allows vendor banks to be synchronised with AFEX to create AFEX
@@ -125,6 +125,10 @@ Setup for Odoo v12
       Various values.
 
     Other required values are picked up from the partner address area.
+
+    Also, Bank Account has an **AFEX Beneficiary Sync** option available in
+    its **Action Drop Down** to allow the Bank Account and its Partner details
+    to be synced from AFEX to Odoo.
 
 - *Partner*
 
