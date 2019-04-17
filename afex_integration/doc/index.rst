@@ -126,9 +126,9 @@ Setup for Odoo v12
 
     Other required values are picked up from the partner address area.
 
-    Also, Bank Account has an **AFEX Beneficiary Sync** option available in
-    its **Action Drop Down** to allow the Bank Account and its Partner details
-    to be synced from AFEX to Odoo.
+    Also, Bank Account has an **Retrieved Beneficiary Information from AFEX**
+    option available in its **Action Drop Down** to allow the Bank Account and
+    its Partner details to be synced from AFEX to Odoo.
 
 - *Partner*
 

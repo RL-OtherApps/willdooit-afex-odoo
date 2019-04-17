@@ -5,7 +5,7 @@
     <field name="name">sync.afex.beneficiary.view.form</field>
     <field name="model">sync.afex.beneficiary</field>
     <field name="arch" type="xml">
-        <form string="AFEX Beneficiary Sync">
+        <form string="Retrieved Beneficiary Information from AFEX">
             <group>
                 <label for="name" name="Retrieved AFEX Beneficiary Data"
                        colspan="2"/>
@@ -13,7 +13,8 @@
             </group>
             <footer>
                 <button name="action_sync" string="Sync"
-                        type="object" class="btn-primary"/>
+                        type="object" class="btn-primary"
+                        confirm="Are you sure you want to overwrite?"/>
                 <button string="Cancel" class="btn-secondary"
                         special="cancel"/>
             </footer>
@@ -22,7 +23,7 @@
 </record>
 
 <record id="payment_mw_invoice_view_action" model="ir.actions.act_window">
-    <field name="name">AFEX Beneficiary Sync</field>
+    <field name="name">Retrieved Beneficiary Information from AFEX</field>
     <field name="type">ir.actions.act_window</field>
     <field name="res_model">sync.afex.beneficiary</field>
     <field name="binding_model_id" ref="base.model_res_partner_bank"/>

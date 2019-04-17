@@ -96,6 +96,7 @@ class ResPartnerBank(models.Model):
         string="AFEX Sync Information",
         copy=False)
     afex_unique_id = fields.Char(
+        string="VendorID",
         copy=False
     )
     afex_sync_status = fields.Selection(
@@ -406,7 +407,7 @@ class ResPartnerBank(models.Model):
                 'BeneficiaryCity': partner.city or '',
                 'BeneficiaryCountrycode': partner.country_id.code or '',
                 'BeneficiaryPostalCode': partner.zip or '',
-                'BeneficiaryRegion': partner.state_id.code or '',
+                'BeneficiaryRegionCode': partner.state_id.code or '',
                 'BankName': self.bank_id.name or '',
                 'BankAccountNumber': self.acc_number or '',
                 'BankAddress1': self.bank_id.street or '',

@@ -1,8 +1,8 @@
-import json
-
 from odoo import api, models, fields, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools.safe_eval import safe_eval
+
+from odoo.addons.afex_integration.models.res_partner import AFEX_ADD_SYNC_DEFINITION
 
 
 class SyncAFEXBeneficiary(models.TransientModel):
@@ -34,9 +34,23 @@ class SyncAFEXBeneficiary(models.TransientModel):
                 _("Error while getting/finding the beneficiary: %s") %
                   (response_json.get('message', ''))
             )
+
+        # Get only the data existing in Odoo
+        data = {}
+        data_text = ""
+        odoo_fields = list(AFEX_ADD_SYNC_DEFINITION.keys())
+        odoo_fields += list(bank.return_afex_data().keys())
+        odoo_fields.remove('TemplateType')
+        odoo_fields.remove('HighLowValue')
+        odoo_fields.append('VendorID')
+        for field in response_json.keys():
+            if field in odoo_fields:
+                data[field] = response_json[field]
+                data_text += "%s: %s\n" % (field, data[field] or '')
+
         result.update({
-            'name': json.dumps(response_json, indent=4, sort_keys=True),
-            'data_original': response_json,
+            'name': data_text,
+            'data_original': data,
             'bank_id': bank.id,
         })
         return result
