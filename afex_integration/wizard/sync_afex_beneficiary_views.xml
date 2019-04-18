@@ -5,7 +5,7 @@
     <field name="name">sync.afex.beneficiary.view.form</field>
     <field name="model">sync.afex.beneficiary</field>
     <field name="arch" type="xml">
-        <form string="Retrieved Beneficiary Information from AFEX">
+        <form string="Retrieve Beneficiary Information from AFEX">
             <group>
                 <field name="label_header" nolabel="1" colspan="2"/>
                 <field name="name" nolabel="1" colspan="2"/>
@@ -22,7 +22,7 @@
 </record>
 
 <record id="payment_mw_invoice_view_action" model="ir.actions.act_window">
-    <field name="name">Retrieved Beneficiary Information from AFEX</field>
+    <field name="name">Retrieve Beneficiary Information from AFEX</field>
     <field name="type">ir.actions.act_window</field>
     <field name="res_model">sync.afex.beneficiary</field>
     <field name="binding_model_id" ref="base.model_res_partner_bank"/>
