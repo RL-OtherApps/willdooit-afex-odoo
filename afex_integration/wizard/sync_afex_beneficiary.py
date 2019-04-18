@@ -12,6 +12,8 @@ class SyncAFEXBeneficiary(models.TransientModel):
     name = fields.Text(string="AFEX Beneficiary Data", readonly=True)
     data_original = fields.Text(string="AFEX Beneficiary Data (Original)")
     bank_id = fields.Many2one('res.partner.bank', string="Bank")
+    label_header = fields.Html(readonly=True)
+    label_footer = fields.Html(readonly=True)
 
     @api.model
     def default_get(self, default_fields):
@@ -42,16 +44,25 @@ class SyncAFEXBeneficiary(models.TransientModel):
         odoo_fields += list(bank.return_afex_data().keys())
         odoo_fields.remove('TemplateType')
         odoo_fields.remove('HighLowValue')
-        odoo_fields.append('VendorID')
+        odoo_fields.append('VendorId')
         for field in response_json.keys():
             if field in odoo_fields:
                 data[field] = response_json[field]
                 data_text += "%s: %s\n" % (field, data[field] or '')
 
+        label_header = ("<p>AFEX has this beneficiary information"
+                        " for <b>%s</b> Vendor ID <b>%s</b></p>" %
+                        (bank.partner_id.name, bank.afex_unique_id))
+        label_footer = ("<p>Replace the beneficiary information you currently"
+                        " hold in Odoo for <b>%s</b> with the information from"
+                        " AFEX shown above?</p>" % (bank.partner_id.name))
+
         result.update({
             'name': data_text,
             'data_original': data,
             'bank_id': bank.id,
+            'label_header': label_header,
+            'label_footer': label_footer,
         })
         return result
 

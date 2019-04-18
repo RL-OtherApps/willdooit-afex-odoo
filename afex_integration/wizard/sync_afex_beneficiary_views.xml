@@ -7,16 +7,15 @@
     <field name="arch" type="xml">
         <form string="Retrieved Beneficiary Information from AFEX">
             <group>
-                <label for="name" name="Retrieved AFEX Beneficiary Data"
-                       colspan="2"/>
+                <field name="label_header" nolabel="1" colspan="2"/>
                 <field name="name" nolabel="1" colspan="2"/>
             </group>
             <footer>
-                <button name="action_sync" string="Sync"
-                        type="object" class="btn-primary"
-                        confirm="Are you sure you want to overwrite?"/>
-                <button string="Cancel" class="btn-secondary"
-                        special="cancel"/>
+                <field name="label_footer" nolabel="1"/>
+                <button name="action_sync" string="Replace" type="object" class="btn-primary"
+                        confirm="Warning: The information you currently hold in Odoo for the beneficiary will be
+                                 overwritten by the information retrieved from AFEX. Do you wish to continue?"/>
+                <button string="Cancel" class="btn-secondary" special="cancel"/>
             </footer>
         </form>
     </field>
