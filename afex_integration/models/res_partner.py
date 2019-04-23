@@ -405,7 +405,7 @@ class ResPartnerBank(models.Model):
                 'NotificationEmail': self.afex_payment_notify_email or '',
                 'BeneficiaryAddressLine1': partner.street or '',
                 'BeneficiaryCity': partner.city or '',
-                'BeneficiaryCountrycode': partner.country_id.code or '',
+                'BeneficiaryCountryCode': partner.country_id.code or '',
                 'BeneficiaryPostalCode': partner.zip or '',
                 'BeneficiaryRegionCode': partner.state_id.code or '',
                 'BankName': self.bank_id.name or '',
