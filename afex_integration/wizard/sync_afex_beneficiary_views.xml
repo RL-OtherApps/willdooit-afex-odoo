@@ -21,7 +21,7 @@
     </field>
 </record>
 
-<record id="payment_mw_invoice_view_action" model="ir.actions.act_window">
+<record id="sync_afex_beneficiary_view_action" model="ir.actions.act_window">
     <field name="name">Retrieve Beneficiary Information from AFEX</field>
     <field name="type">ir.actions.act_window</field>
     <field name="res_model">sync.afex.beneficiary</field>
