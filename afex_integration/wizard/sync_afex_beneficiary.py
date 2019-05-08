@@ -1,8 +1,13 @@
+from datetime import timedelta
+
 from odoo import api, models, fields, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools.safe_eval import safe_eval
 
-from odoo.addons.afex_integration.models.res_partner import AFEX_ADD_SYNC_DEFINITION
+from odoo.addons.afex_integration.models.res_partner \
+    import AFEX_ADD_SYNC_DEFINITION
+
+AFEX_BENEFICIARY_SYNC_EXPIRY = 120 # In seconds
 
 
 class SyncAFEXBeneficiary(models.TransientModel):
@@ -14,6 +19,7 @@ class SyncAFEXBeneficiary(models.TransientModel):
     bank_id = fields.Many2one('res.partner.bank', string="Bank")
     label_header = fields.Html(readonly=True)
     label_footer = fields.Html(readonly=True)
+    date_retrieved = fields.Datetime()
 
     @api.model
     def default_get(self, default_fields):
@@ -63,11 +69,21 @@ class SyncAFEXBeneficiary(models.TransientModel):
             'bank_id': bank.id,
             'label_header': label_header,
             'label_footer': label_footer,
+            'date_retrieved': fields.Datetime.now(),
         })
         return result
 
     @api.multi
     def action_sync(self):
         self.ensure_one()
+
+        date_retrieved = fields.Datetime.from_string(self.date_retrieved) + \
+            timedelta(seconds=AFEX_BENEFICIARY_SYNC_EXPIRY)
+        now = fields.Datetime.from_string(fields.Datetime.now())
+        if date_retrieved < now:
+            raise UserError(
+                _("The replacement period has timed out. Please "
+                  "Retrieve Beneficiary Information from AFEX again"))
+
         data = safe_eval(self.data_original)
         self.bank_id.sync_from_afex_beneficiary_find(data)

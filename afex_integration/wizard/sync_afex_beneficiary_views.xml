@@ -9,6 +9,9 @@
             <group>
                 <field name="label_header" nolabel="1" colspan="2"/>
                 <field name="name" nolabel="1" colspan="2"/>
+                <field name="data_original" invisible="1"/>
+                <field name="bank_id" invisible="1"/>
+                <field name="date_retrieved" invisible="1"/>
             </group>
             <footer>
                 <field name="label_footer" nolabel="1"/>
