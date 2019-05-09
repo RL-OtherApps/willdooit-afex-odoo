@@ -85,9 +85,18 @@ class SyncAFEXBeneficiary(models.TransientModel):
             timedelta(seconds=AFEX_BENEFICIARY_SYNC_EXPIRY)
         now = fields.Datetime.from_string(fields.Datetime.now())
         if date_retrieved < now:
-            raise UserError(
-                _("The replacement period has timed out. Please "
-                  "Retrieve Beneficiary Information from AFEX again"))
+            view = self.env.ref(
+                'afex_integration.sync_afex_beneficiary_timeout_view_form')
+            return {
+                'name': _("Odoo Server Error"),
+                'type': 'ir.actions.act_window',
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': 'sync.afex.beneficiary',
+                'res_id': self.id,
+                'view_id': view.id,
+                'target': 'new',
+            }
 
         data = safe_eval(self.data_original)
         self.bank_id.sync_from_afex_beneficiary_find(data)

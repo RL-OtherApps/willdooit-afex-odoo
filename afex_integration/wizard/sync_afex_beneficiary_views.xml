@@ -35,4 +35,21 @@
     <field name="target">new</field>
 </record>
 
+
+<record id="sync_afex_beneficiary_timeout_view_form" model="ir.ui.view">
+    <field name="name">sync.afex.beneficiary.error.view.form</field>
+    <field name="model">sync.afex.beneficiary</field>
+    <field name="priority">100</field>
+    <field name="arch" type="xml">
+        <form string="Odoo Server Error">
+            <p>
+                The replacement period has timed out. Please Retrieve Beneficiary Information from AFEX again
+            </p>
+            <footer>
+                <button string="Ok" class="btn-primary" special="cancel"/>
+            </footer>
+        </form>
+    </field>
+</record>
+
 </odoo>

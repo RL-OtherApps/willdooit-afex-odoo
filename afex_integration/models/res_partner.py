@@ -311,7 +311,6 @@ class ResPartnerBank(models.Model):
             'afex_corporate': response_json.get('Corporate', False),
             'afex_payment_notify_email':
                 response_json.get('NotificationEmail', False),
-            'afex_sync_status': 'done',
         }
 
         # Update Bank
@@ -374,14 +373,24 @@ class ResPartnerBank(models.Model):
         int_bank_country = self.env['res.country'].search(
             [('code', '=', int_bank_country_code)], limit=1)
         partner_bank_data['afex_int_bank_country_id'] = int_bank_country.id
-        purpose = self.env['afex.purpose.of.payment'].search(
-            [('code', '=', response_json.get('RemittanceLine2', False)),
-             ('currency_id', '=', self.currency_id.id),
-             ('afex_bank_country_id', '=', bank_country.id),
-             ('partner_country_id', '=', country.id),
-             ], limit=1)
-        partner_bank_data['afex_purpose_of_payment_id'] = purpose.id
         self.write(partner_bank_data)
+
+        # Get Purpose of Payment
+        Purpose = self.env['afex.purpose.of.payment']
+        purpose_data = [
+            ('code', '=', response_json.get('RemittanceLine2', False)),
+            ('currency_id', '=', self.currency_id.id),
+            ('afex_bank_country_id', '=', self.afex_bank_country_id.id),
+            ('partner_country_id', '=', self.partner_country_id.id),
+        ]
+        purpose = Purpose.search(purpose_data, limit=1)
+        if not purpose:
+            self.onchange_purpose_of_payment()
+            purpose = Purpose.search(purpose_data, limit=1)
+        self.afex_purpose_of_payment_id = purpose.id
+
+        # Set sync status to done
+        self.afex_sync_status = 'done'
 
     @api.multi
     def update_afex_additional_sync_fields(self, field, value):
