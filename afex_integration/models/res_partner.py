@@ -18,7 +18,7 @@ AFEX_ADD_SYNC_DEFINITION = {
     'BankSWIFTBIC': {
         'name': 'Bank SWIFT BIC',
         },
-    'BankRoutingCode': {
+    'BankRoutingcode': {
         'name': 'Bank Routing Code',
         },
     'IntermediaryBankSWIFTBIC': {

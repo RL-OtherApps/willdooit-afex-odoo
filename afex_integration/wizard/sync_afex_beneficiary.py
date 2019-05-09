@@ -51,10 +51,14 @@ class SyncAFEXBeneficiary(models.TransientModel):
         odoo_fields.remove('TemplateType')
         odoo_fields.remove('HighLowValue')
         odoo_fields.append('VendorId')
+        odoo_fields.append('BankRoutingCode')
         for field in response_json.keys():
             if field in odoo_fields:
                 data[field] = response_json[field]
-                data_text += "%s: %s\n" % (field, data[field] or '')
+        for field in sorted(data.keys()):
+            data_text += "%s: %s\n" % (field, data[field] or '')
+        if 'BankRoutingCode' in data:
+            data['BankRoutingcode'] = data['BankRoutingCode']
 
         label_header = ("<p>AFEX has this beneficiary information"
                         " for <b>%s</b> Vendor ID <b>%s</b></p>" %
@@ -65,7 +69,7 @@ class SyncAFEXBeneficiary(models.TransientModel):
 
         result.update({
             'name': data_text,
-            'data_original': data,
+            'data_original': str(data),
             'bank_id': bank.id,
             'label_header': label_header,
             'label_footer': label_footer,
