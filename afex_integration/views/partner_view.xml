@@ -10,6 +10,7 @@
         <xpath expr='//field[@name="company_id"]/..' position="after">
             <group>
                 <field name="is_afex"/>
+                <field name="afex_unique_id" readonly="True"/>
                 <field name="afex_sync_status" attrs="{'invisible':[('is_afex','=',False)]}"/>
                 <field name="afex_corporate" attrs="{'invisible':[('is_afex','=',False)]}"/>
                 <field name="afex_bank_country_id" attrs="{'invisible':[('is_afex','=',False)]}"/>
