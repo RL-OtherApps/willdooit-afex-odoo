@@ -3,9 +3,9 @@
 from odoo import api, fields, models
 
 VALUE_DATE_TYPES = [
-    ('CASH', 'Today'),
-    ('TOM', 'Next business day'),
-    ('SPOT', 'Two business days'),
+    ('CASH', 'Today (Cash)'),
+    ('TOM', 'Next business day (Tom)'),
+    ('SPOT', 'Two business days (Spot)'),
     ]
 
 

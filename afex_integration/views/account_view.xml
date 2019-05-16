@@ -75,6 +75,7 @@
             <field name="afex_allow_earliest_value_date" invisible="1"/>
             <field name="afex_value_date_type" attrs="{'invisible': ['|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True)],
                                                        'readonly': [('afex_allow_earliest_value_date', '=', False)]}"/>
+            <field name="afex_value_date_type_old" invisible="1"/>
         </field>
 
         <field name="communication" position="after">
@@ -159,6 +160,7 @@
             <field name="afex_allow_earliest_value_date" invisible="1"/>
             <field name="afex_value_date_type" attrs="{'invisible': ['|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True)],
                                                        'readonly': [('afex_allow_earliest_value_date', '=', False)]}"/>
+            <field name="afex_value_date_type_old" invisible="1"/>
         </field>
 
         <field name="communication" position="after">
@@ -251,6 +253,7 @@
             <field name="afex_allow_earliest_value_date" invisible="1"/>
             <field name="afex_value_date_type" attrs="{'invisible': ['|', ('is_afex', '=', False), ('afex_scheduled_payment', '=', True)],
                                                        'readonly': ['|', ('state', '!=', 'draft'), ('afex_allow_earliest_value_date', '=', False)]}"/>
+            <field name="afex_value_date_type_old" invisible="1"/>
         </field>
 
         <field name="communication" position="after">
