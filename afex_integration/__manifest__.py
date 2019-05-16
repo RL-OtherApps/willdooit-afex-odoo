@@ -134,6 +134,10 @@ Setup for Odoo v10
 
     Other required values are picked up from the partner address area.
 
+    Also, Bank Account has an **Retrieve Beneficiary Information from AFEX**
+    option available in its **Action Drop Down** to allow the Bank Account and
+    its Partner details to be synced from AFEX to Odoo.
+
 - *Partner*
 
     Partners have an **AFEX Sync** option available in their **Action Drop
@@ -247,12 +251,11 @@ Usage for Odoo v10
         "views/partner_view.xml",
         "security/ir.model.access.csv",
         "data/ir_config_data.xml",
+        "wizard/sync_afex_beneficiary_views.xml",
     ],
     'images': [
         'static/description/banner.png',
     ],
-    "demo": [],
-    "test": [],
     "installable": True,
     "active": False,
     "application": True,
