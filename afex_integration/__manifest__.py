@@ -130,7 +130,7 @@ Setup for Odoo v12
 
     Other required values are picked up from the partner address area.
 
-    Bank Accounts hav a **Retrieve Beneficiary Information from AFEX** option
+    Bank Accounts have a **Retrieve Beneficiary Information from AFEX** option
     available in their **Action Drop Down** to allow the Bank Account and
     its Partner details to be retrieved from AFEX to Odoo.
 
