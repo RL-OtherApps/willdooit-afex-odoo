@@ -137,12 +137,15 @@ class AccountAbstractPayment(models.AbstractModel):
     afex_terms_display = fields.Html(
         compute='_afex_terms_display')
     afex_allow_earliest_value_date = fields.Boolean(
-        related='journal_id.company_id.afex_allow_earliest_value_date')
+        string="Allow Earliest Value Date", copy=False)
     afex_value_date_type = fields.Selection(
         selection=VALUE_DATE_TYPES, string="Payment Type",
         default='SPOT', copy=False,
         help=("Choose between 'Today', 'Next business day' or "
               "'Two business days' rate for your trade request."))
+    afex_value_date_type_old = fields.Selection(
+        selection=VALUE_DATE_TYPES,
+        copy=False)
 
     afex_stl_currency_id = fields.Many2one('res.currency')
     afex_stl_amount = fields.Monetary(
@@ -215,7 +218,10 @@ class AccountAbstractPayment(models.AbstractModel):
         if self.journal_id and self.is_afex and self.passed_currency_id:
             self.currency_id = self.passed_currency_id
         self.afex_direct_debit = self.journal_id.afex_direct_debit
-        self.afex_value_date_type = self.journal_id.company_id.afex_value_date_type
+        self.afex_value_date_type = \
+            self.journal_id.company_id.afex_value_date_type
+        self.afex_allow_earliest_value_date = \
+            self.journal_id.company_id.afex_allow_earliest_value_date
 
     @api.onchange('currency_id', 'journal_id')
     def _onchange_afex(self):
@@ -236,21 +242,26 @@ class AccountAbstractPayment(models.AbstractModel):
         self.amt_before_onchange = self.amount
         return self._onchange_afex()
 
-    @api.onchange('afex_scheduled_payment', 'invoice_ids', 'is_afex', 'afex_value_date_type')
-    def _onchange_afex_scheduled_payment_date(self):
+    @api.onchange('journal_id', 'currency_id', 'afex_value_date_type')
+    def _onchange_scheduled_payment_date(self):
         today = fields.Date.context_today(self)
         payment_date = today
+        warning = {}
         if self.is_afex:
             if self.afex_scheduled_payment and self.invoice_ids:
                 due_dates = self.invoice_ids.mapped('date_due')
-                payment_date = due_dates and max(min(due_dates), today) or False
+                payment_date = due_dates and max(min(due_dates), today) or \
+                    False
+                self.afex_value_date_type_old = False
             elif self.afex_scheduled_payment and\
                     self.env.context.get('active_model') == 'account.invoice':
                 invoice_ids = self.env.context.get('active_ids')
                 invoices = self.env['account.invoice'].browse(invoice_ids)
                 due_dates = invoices.mapped('date_due')
-                payment_date = due_dates and max(min(due_dates), today) or False
-            elif not self.afex_scheduled_payment:
+                payment_date = due_dates and max(min(due_dates), today) or \
+                    False
+                self.afex_value_date_type_old = False
+            elif not self.afex_scheduled_payment and self.afex_value_date_type:
                 stl_currency = self.journal_id.currency_id or \
                     self.journal_id.company_id.currency_id
                 currencypair = "%s%s" % (
@@ -261,16 +272,25 @@ class AccountAbstractPayment(models.AbstractModel):
                 response_json = self.env['afex.connector'].afex_response(
                         url, payment=self)
                 if response_json.get('ERROR', True):
-                    raise UserError(
-                        _('Error with value date: %s') %
-                        (response_json.get('message', ''),))
-                value_date = response_json.get('items')
-                if value_date:
-                    payment_date = datetime.strptime(
-                        value_date, AFEX_DATE_FORMAT)
-                    payment_date = fields.Date.to_string(
-                        payment_date)
+                    # If value date is not available for the currency, return
+                    #   a warning and set the payment type and payment date
+                    #   back to original
+                    warning['title'] = _("Error with Payment Type")
+                    message = "%s Please choose a different Payment Type."
+                    message = message % response_json.get('message', "")
+                    warning['message'] = _(message)
+                    self.afex_allow_earliest_value_date = True
+                    self.afex_value_date_type = self.afex_value_date_type_old
+                    payment_date = self.payment_date or today
+                else:
+                    self.afex_value_date_type_old = self.afex_value_date_type
+                    value_date = response_json.get('items')
+                    if value_date:
+                        payment_date = datetime.strptime(
+                            value_date, AFEX_DATE_FORMAT)
+                        payment_date = fields.Date.to_string(payment_date)
         self.payment_date = payment_date
+        return {'warning': warning}
 
     @api.onchange('is_afex', 'partner_id', 'currency_id')
     def onchange_purpose_of_payment(self):
@@ -385,7 +405,8 @@ class AccountAbstractPayment(models.AbstractModel):
                     url, payment=payment)
             if response_json.get('ERROR', True):
                 raise UserError(
-                    _('Error with value date: %s') %
+                    _("Error with Payment Type: %s Please"
+                      " choose a different Payment Type.") %
                     (response_json.get('message', ''),))
             valuedate = response_json.get('items', fields.Date.context_today(self))
 
@@ -978,8 +999,9 @@ class AccountPaymentAfexFee(models.Model):
 
     payment_id = fields.Many2one(
         'account.payment', ondelete='cascade')
-    register_payment_id = fields.Many2one(
-        'account.register.payment', ondelete='set null')
+    register_payment_id = fields.Integer(
+        help=("ID reference for account.register.payments"
+              " since TransientModel cannot be linked"))
     afex_fee_amount = fields.Monetary(
         string='AFEX Fee Amount', currency_field='afex_fee_currency_id')
     afex_fee_currency_id = fields.Many2one(
