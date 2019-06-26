@@ -228,7 +228,8 @@ class ResPartnerBank(models.Model):
 class AFEXAddFields(models.Model):
     _name = "afex.additional.sync.fields"
 
-    bank_id = fields.Many2one('res.partner.bank', required=True)
+    bank_id = fields.Many2one('res.partner.bank', required=True,
+                              ondelete='cascade')
     field = fields.Selection(AFEX_ADD_SYNC_FIELDS, required=True)
     value = fields.Char(required=True)
 
