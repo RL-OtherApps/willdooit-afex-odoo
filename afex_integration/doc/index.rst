@@ -1,5 +1,5 @@
 =================
-AFEX Global Vendor Payments for Businesses
+AFEX Global Payments for Businesses
 =================
 
 Introduction (10.0.5.1)

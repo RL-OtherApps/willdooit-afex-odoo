@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
 {
-    "name": "AFEX Global Vendor Payments for Businesses",
+    "name": "AFEX Global Payments for Businesses",
     "version": "10.0.5.1",
     "summary": "Make payments to vendors in a foreign currency using AFEX, "
                "by WilldooIT",
     "description": """
-=====================================
-Global Vendor Payments for Businesses
-=====================================
+==============================
+Global Payments for Businesses
+==============================
 
 Introduction (10.0.5.1)
 =======================
