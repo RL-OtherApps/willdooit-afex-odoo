@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 {
-    "name": "AFEX Global Vendor Payments for Businesses",
+    "name": "AFEX Global Payments for Businesses",
     "version": "9.0.5.9",
     "summary": "Make payments to vendors in a foreign currency using AFEX, "
                "by WilldooIT",
     "description": """
-Global Vendor Payments for Businesses
-=====================================
+Global Payments for Businesses
+==============================
 
 This module allows vendor banks to be synchronised with AFEX to create AFEX
 Beneficiaries. It also allows payments within Odoo to book payments to vendors
@@ -181,6 +181,7 @@ Usage
     "contributors": [
         'Matthew Palmieri',
         'Richard deMeester',
+        'Michael Villamar',
     ],
     'website': 'https://www.willdooit.com',
     "license": "AGPL-3",
@@ -195,8 +196,6 @@ Usage
     'images': [
         'static/description/banner.png',
     ],
-    "demo": [],
-    "test": [],
     "installable": True,
     "active": False,
     "application": True,
